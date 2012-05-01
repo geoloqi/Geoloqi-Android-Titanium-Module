@@ -1,11 +1,9 @@
 package ti.geoloqi.common;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.titanium.util.TiConvert;
 import org.json.JSONArray;
@@ -14,47 +12,75 @@ import org.json.JSONObject;
 
 import android.location.Location;
 
+/**
+ * This is a utility class that contains common functions used by module classes
+ */
 final public class MUtils {
 	public static final String LCAT = MUtils.class.getSimpleName();
 	private static final String DEFAULT_RESPONSE_FORMAT = "UTF-8";
+	private static final String ATTRIB_ERROR_CODE = "error_code";
+	private static final String ATTRIB_ERROR_DESC = "error_description";
+	private static final String ATTRIB_RESPONSE = "response";
 
+	private static final String JSON_ATT_PROVIDER = "provider";
+	private static final String JSON_ATT_PROVIDER_NAME = "name";
+	private static final String JSON_ATT_COORDINATES = "coords";
+	private static final String JSON_ATT_COORDINATES_ACCURACY = "accuracy";
+	private static final String JSON_ATT_COORDINATES_ALTITUDE = "altitude";
+	private static final String JSON_ATT_COORDINATES_LATITUDE = "latitude";
+	private static final String JSON_ATT_COORDINATES_LONGITUDE = "longitude";
+	private static final String JSON_ATT_COORDINATES_SPEED = "speed";
+
+	/**
+	 * Private Class Constructor
+	 */
 	private MUtils() {}
 
+	/**
+	 * HttpResponse to KrollDict Converter with default format
+	 * 
+	 * @param response HttpResponse
+	 * @return KrollDict
+	 */
 	public static KrollDict processHttpResponse(HttpResponse response) {
 		return processHttpResponse(response, DEFAULT_RESPONSE_FORMAT);
 	}
 
-	// This method converts the httpResponse to json object and return the kroll
-	// dict fro the titanium user
+	/**
+	 * HttpResponse to KrollDict Converter
+	 * 
+	 * @param response HttpResponse
+	 * @param format Content Format
+	 * @return KrollDict
+	 */
 	public static KrollDict processHttpResponse(HttpResponse response, String format) {
-		KrollDict kd = null;
+		KrollDict kd = new KrollDict();
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), format));
-			StringBuilder builder = new StringBuilder();
-			for (String line = null; (line = reader.readLine()) != null;) {
-				builder.append(line);
-			}
-			String strResponse = builder.toString();
-			MLog.d(LCAT, strResponse);
+			JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), format));
 
-			try {
-				kd = new KrollDict();
-				kd.put("response", new KrollDict(new JSONObject(strResponse)));
-			} catch (Exception e) {
-				kd = new KrollDict();
-				MLog.e(LCAT, "processHttpResponse-->" + e.toString());
-			}
-		} catch (IllegalStateException e) {
-			MLog.e(LCAT, e.toString());
-			e.printStackTrace();
-		} catch (IOException e) {
-			MLog.e(LCAT, e.toString());
+			MLog.d(LCAT, json.toString(1));
+
+			kd.put(ATTRIB_RESPONSE, new KrollDict(json));
+		} catch (JSONException je) {
+			MLog.e(LCAT, "JSONException: " + je.toString());
+			je.printStackTrace();
+		} catch (IllegalStateException ise) {
+			MLog.e(LCAT, "IllegalStateException: " + ise.toString());
+			ise.printStackTrace();
+		} catch (Exception e) {
+			MLog.e(LCAT, "Exception: " + e.toString());
 			e.printStackTrace();
 		}
 
 		return kd;
 	}
 
+	/**
+	 * Converts json location object to android location object
+	 * 
+	 * @param location JSON Object
+	 * @return
+	 */
 	public static Location parseLocation(Object location) {
 		Location loc = null;
 		try {
@@ -64,12 +90,12 @@ final public class MUtils {
 
 			JSONObject coords = null;
 			JSONObject provider = null;
-			if (jsonObj != null && jsonObj.has("coords")) {
-				coords = jsonObj.getJSONObject("coords");
+			if (jsonObj != null && jsonObj.has(JSON_ATT_COORDINATES)) {
+				coords = jsonObj.getJSONObject(JSON_ATT_COORDINATES);
 			}
 
-			if (jsonObj != null && jsonObj.has("provider")) {
-				provider = jsonObj.getJSONObject("provider");
+			if (jsonObj != null && jsonObj.has(JSON_ATT_PROVIDER)) {
+				provider = jsonObj.getJSONObject(JSON_ATT_PROVIDER);
 			}
 
 			MLog.d(LCAT, "coords=" + coords);
@@ -79,24 +105,24 @@ final public class MUtils {
 			float acc = 0, speed = 0;
 			double lat = 0, longt = 0, alt = 0;
 
-			if (provider != null && provider.has("name")) {
-				prov = String.valueOf(provider.get("name"));
+			if (provider != null && provider.has(JSON_ATT_PROVIDER_NAME)) {
+				prov = String.valueOf(provider.get(JSON_ATT_PROVIDER_NAME));
 			}
 			if (coords != null) {
-				if (coords.has("accuracy")) {
-					acc = Float.parseFloat(String.valueOf(coords.get("accuracy")));
+				if (coords.has(JSON_ATT_COORDINATES_ACCURACY)) {
+					acc = Float.parseFloat(String.valueOf(coords.get(JSON_ATT_COORDINATES_ACCURACY)));
 				}
-				if (coords.has("altitude")) {
-					alt = Double.parseDouble(String.valueOf(coords.get("altitude")));
+				if (coords.has(JSON_ATT_COORDINATES_ALTITUDE)) {
+					alt = Double.parseDouble(String.valueOf(coords.get(JSON_ATT_COORDINATES_ALTITUDE)));
 				}
-				if (coords.has("latitude")) {
-					lat = Double.parseDouble(String.valueOf(coords.get("latitude")));
+				if (coords.has(JSON_ATT_COORDINATES_LATITUDE)) {
+					lat = Double.parseDouble(String.valueOf(coords.get(JSON_ATT_COORDINATES_LATITUDE)));
 				}
-				if (coords.has("longitude")) {
-					longt = Double.parseDouble(String.valueOf(coords.get("longitude")));
+				if (coords.has(JSON_ATT_COORDINATES_LONGITUDE)) {
+					longt = Double.parseDouble(String.valueOf(coords.get(JSON_ATT_COORDINATES_LONGITUDE)));
 				}
-				if (coords.has("speed")) {
-					speed = Float.parseFloat(String.valueOf(coords.get("speed")));
+				if (coords.has(JSON_ATT_COORDINATES_SPEED)) {
+					speed = Float.parseFloat(String.valueOf(coords.get(JSON_ATT_COORDINATES_SPEED)));
 				}
 			}
 			if (!(provider == null && coords == null)) {
@@ -122,24 +148,36 @@ final public class MUtils {
 		return loc;
 	}
 
+	/**
+	 * Android location to KrollDict convertor
+	 * 
+	 * @param loc Android location
+	 * @return KrollDict
+	 */
 	public static KrollDict locationToDictionary(Location loc) {
 		KrollDict kd = new KrollDict(2);
 		KrollDict kdCoord = new KrollDict(5);
 		KrollDict kdProvider = new KrollDict(1);
 
 		if (loc != null) {
-			kdProvider.put("name", loc.getProvider());
-			kdCoord.put("accuracy", loc.getAccuracy());
-			kdCoord.put("altitude", loc.getAltitude());
-			kdCoord.put("latitude", loc.getLatitude());
-			kdCoord.put("longitude", loc.getLongitude());
-			kdCoord.put("speed", loc.getSpeed());
-			kd.put("coords", kdCoord);
-			kd.put("provider", kdProvider);
+			kdProvider.put(JSON_ATT_PROVIDER_NAME, loc.getProvider());
+			kdCoord.put(JSON_ATT_COORDINATES_ACCURACY, loc.getAccuracy());
+			kdCoord.put(JSON_ATT_COORDINATES_ALTITUDE, loc.getAltitude());
+			kdCoord.put(JSON_ATT_COORDINATES_LATITUDE, loc.getLatitude());
+			kdCoord.put(JSON_ATT_COORDINATES_LONGITUDE, loc.getLongitude());
+			kdCoord.put(JSON_ATT_COORDINATES_SPEED, loc.getSpeed());
+			kd.put(JSON_ATT_COORDINATES, kdCoord);
+			kd.put(JSON_ATT_PROVIDER, kdProvider);
 		}
 		return kd;
 	}
 
+	/**
+	 * This method converts HashMap to JSON Object
+	 * 
+	 * @param object Hashmap object
+	 * @return JSONObject
+	 */
 	public static JSONObject convertToJSON(Object object) {
 		JSONObject json = null;
 		try {
@@ -151,6 +189,12 @@ final public class MUtils {
 		return json;
 	}
 
+	/**
+	 * This method converts an JSON Object array to JSON array
+	 * 
+	 * @param object An array of JSON objects
+	 * @return JSONArray
+	 */
 	public static JSONArray convertToJSONArray(Object object) {
 		JSONArray json = null;
 		try {
@@ -164,4 +208,18 @@ final public class MUtils {
 		return json;
 	}
 
+	/**
+	 * This method generates error object to be sent to js when firing
+	 * onValidate event
+	 * 
+	 * @param code Error code to be sent
+	 * @param description Error Description to be sent
+	 * @return Error object wrapped as KrollDict object
+	 */
+	public static KrollDict generateErrorObject(String code, String description) {
+		KrollDict kd = new KrollDict(2);
+		kd.put(ATTRIB_ERROR_CODE, code);
+		kd.put(ATTRIB_ERROR_DESC, description);
+		return kd;
+	}
 }

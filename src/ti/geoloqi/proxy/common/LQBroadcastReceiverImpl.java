@@ -12,40 +12,62 @@ import android.location.Location;
 import com.geoloqi.android.sdk.LQTracker.LQTrackerProfile;
 import com.geoloqi.android.sdk.receiver.LQBroadcastReceiver;
 
+/**
+ * This class is an implementation of LQBroadcastReceiver of geoloqi
+ * 
+ * @see com.geoloqi.android.sdk.receiver.LQBroadcastReceiver
+ */
 public class LQBroadcastReceiverImpl extends LQBroadcastReceiver {
 
-	public static final String TAG = LQBroadcastReceiverImpl.class.getName();
+	public static final String LCAT = LQBroadcastReceiverImpl.class.getSimpleName();
 	private static final String OLD_PROFILE = "OLD_PROFILE";
 	private static final String NEW_PROFILE = "NEW_PROFILE";
+	private static final String LOCATION_ATTRIB = "location";
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.geoloqi.android.sdk.receiver.LQBroadcastReceiver#onLocationChanged
+	 * (android.content.Context, android.location.Location)
+	 */
 	@Override
 	public void onLocationChanged(Context context, Location location) {
-		MLog.d(TAG, "onLocationChanged. module=");
-		KrollDict locationKD = MUtils.locationToDictionary(location);
-		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.LOCATION_CHANGED,
-				locationKD);
+		MLog.d(LCAT, "in onLocationChanged");
+		KrollDict locationKD = new KrollDict(1);
+		locationKD.put(LOCATION_ATTRIB, MUtils.locationToDictionary(location));
+		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.LOCATION_CHANGED, locationKD);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.geoloqi.android.sdk.receiver.LQBroadcastReceiver#onLocationUploaded
+	 * (android.content.Context, int)
+	 */
 	@Override
-	public void onLocationUploaded(Context context,
-			int numberOfLocationsUploaded) {
-
-		MLog.d(TAG, "onLocationUploaded.");
-		MLog.d(TAG, "Number of Locations Uploaded=" + numberOfLocationsUploaded);
-
-		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.LOCATION_UPLOADED,
-				numberOfLocationsUploaded);
+	public void onLocationUploaded(Context context, int numberOfLocationsUploaded) {
+		MLog.d(LCAT, "in onLocationUploaded, Number of Locations Uploaded: " + numberOfLocationsUploaded);
+		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.LOCATION_UPLOADED, numberOfLocationsUploaded);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.geoloqi.android.sdk.receiver.LQBroadcastReceiver#onTrackerProfileChanged
+	 * (android.content.Context,
+	 * com.geoloqi.android.sdk.LQTracker.LQTrackerProfile,
+	 * com.geoloqi.android.sdk.LQTracker.LQTrackerProfile)
+	 */
 	@Override
-	public void onTrackerProfileChanged(Context context,
-			LQTrackerProfile oldProfile, LQTrackerProfile newProfile) {
-		MLog.d(TAG, "onTrackerProfileChanged.");
+	public void onTrackerProfileChanged(Context context, LQTrackerProfile oldProfile, LQTrackerProfile newProfile) {
+		MLog.d(LCAT, "in onTrackerProfileChanged.");
 		KrollDict profileKD = new KrollDict(2);
 		profileKD.put(OLD_PROFILE, LQTrackerProxy.profileToString(oldProfile));
 		profileKD.put(NEW_PROFILE, LQTrackerProxy.profileToString(newProfile));
-		GeoloqiModule.getInstance().fireEvent(
-				GeoloqiModule.TRACKER_PROFILE_CHANGED, profileKD);
+		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.TRACKER_PROFILE_CHANGED, profileKD);
 	}
 
 }
