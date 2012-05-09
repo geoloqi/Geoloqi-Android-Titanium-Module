@@ -34,9 +34,11 @@ public class OnRunApiRequestListenerImpl implements OnRunApiRequestListener {
 	/**
 	 * Class Constructor
 	 * 
-	 * @param krollObject Object on which event call is to be executed
-	 * @param callbackMap Map containing key as event name and value as a
-	 * callback function to be called on the event
+	 * @param krollObject
+	 *            Object on which event call is to be executed
+	 * @param callbackMap
+	 *            Map containing key as event name and value as a callback
+	 *            function to be called on the event
 	 */
 	public OnRunApiRequestListenerImpl(KrollObject krollObject, Map<String, KrollFunction> callbackMap) {
 		this.krollObject = krollObject;
@@ -85,11 +87,8 @@ public class OnRunApiRequestListenerImpl implements OnRunApiRequestListener {
 	public void onFailure(LQSession session, LQException e) {
 		MLog.d(LCAT, "onFailure, message is: " + e.getMessage());
 
-		KrollDict kd = new KrollDict(1);
-		kd.put("message", e.getMessage());
-
 		if (onFailure != null) {
-			onFailure.call(krollObject, kd);
+			onFailure.call(krollObject, MUtils.generateErrorObject("", e.getMessage()));
 		}
 	}
 

@@ -18,14 +18,15 @@ final public class MLog {
 	/**
 	 * Private Class Constructor
 	 */
-	private MLog() {
-	}
+	private MLog() {}
 
 	/**
 	 * Logs the debug info.
 	 * 
-	 * @param tag Tag name
-	 * @param message Message value
+	 * @param tag
+	 *            Tag name
+	 * @param message
+	 *            Message value
 	 */
 	public static void d(String tag, String message) {
 		if (GeoloqiModule.debug) {
@@ -36,8 +37,10 @@ final public class MLog {
 	/**
 	 * Logs the error info.
 	 * 
-	 * @param tag Tag name
-	 * @param message Message value
+	 * @param tag
+	 *            Tag name
+	 * @param message
+	 *            Message value
 	 */
 	public static void e(String tag, String message) {
 		Log.e(processTag(tag), message);
@@ -46,8 +49,10 @@ final public class MLog {
 	/**
 	 * Logs the warning.
 	 * 
-	 * @param tag Tag name
-	 * @param message Message value
+	 * @param tag
+	 *            Tag name
+	 * @param message
+	 *            Message value
 	 */
 	public static void w(String tag, String message) {
 		Log.w(processTag(tag), message);
@@ -56,7 +61,8 @@ final public class MLog {
 	/**
 	 * Add date part to the tag
 	 * 
-	 * @param tag Tag name
+	 * @param tag
+	 *            Tag name
 	 * @return formatted tag
 	 */
 	private static String processTag(String tag) {

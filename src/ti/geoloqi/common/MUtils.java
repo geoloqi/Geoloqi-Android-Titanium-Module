@@ -1,10 +1,13 @@
 package ti.geoloqi.common;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.titanium.util.TiConvert;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +42,8 @@ final public class MUtils {
 	/**
 	 * HttpResponse to KrollDict Converter with default format
 	 * 
-	 * @param response HttpResponse
+	 * @param response
+	 *            HttpResponse
 	 * @return KrollDict
 	 */
 	public static KrollDict processHttpResponse(HttpResponse response) {
@@ -49,10 +53,13 @@ final public class MUtils {
 	/**
 	 * HttpResponse to KrollDict Converter
 	 * 
-	 * @param response HttpResponse
-	 * @param format Content Format
+	 * @param response
+	 *            HttpResponse
+	 * @param format
+	 *            Content Format
 	 * @return KrollDict
 	 */
+	@SuppressWarnings("unchecked")
 	public static KrollDict processHttpResponse(HttpResponse response, String format) {
 		KrollDict kd = new KrollDict();
 		try {
@@ -60,7 +67,17 @@ final public class MUtils {
 
 			MLog.d(LCAT, json.toString(1));
 
-			kd.put(ATTRIB_RESPONSE, new KrollDict(json));
+			Iterator<String> itResponse = json.keys();
+			String key = null, value = null;
+			KrollDict kdResponse = new KrollDict(5);
+			while (itResponse.hasNext()) {
+				key = itResponse.next();
+				value = (json.getString(key) == null ? "" : json.getString(key));
+
+				kdResponse.put(key, value);
+			}
+
+			kd.put(ATTRIB_RESPONSE, kdResponse);
 		} catch (JSONException je) {
 			MLog.e(LCAT, "JSONException: " + je.toString());
 			je.printStackTrace();
@@ -78,7 +95,8 @@ final public class MUtils {
 	/**
 	 * Converts json location object to android location object
 	 * 
-	 * @param location JSON Object
+	 * @param location
+	 *            JSON Object
 	 * @return
 	 */
 	public static Location parseLocation(Object location) {
@@ -151,7 +169,8 @@ final public class MUtils {
 	/**
 	 * Android location to KrollDict convertor
 	 * 
-	 * @param loc Android location
+	 * @param loc
+	 *            Android location
 	 * @return KrollDict
 	 */
 	public static KrollDict locationToDictionary(Location loc) {
@@ -175,7 +194,8 @@ final public class MUtils {
 	/**
 	 * This method converts HashMap to JSON Object
 	 * 
-	 * @param object Hashmap object
+	 * @param object
+	 *            Hashmap object
 	 * @return JSONObject
 	 */
 	public static JSONObject convertToJSON(Object object) {
@@ -192,7 +212,8 @@ final public class MUtils {
 	/**
 	 * This method converts an JSON Object array to JSON array
 	 * 
-	 * @param object An array of JSON objects
+	 * @param object
+	 *            An array of JSON objects
 	 * @return JSONArray
 	 */
 	public static JSONArray convertToJSONArray(Object object) {
@@ -212,8 +233,10 @@ final public class MUtils {
 	 * This method generates error object to be sent to js when firing
 	 * onValidate event
 	 * 
-	 * @param code Error code to be sent
-	 * @param description Error Description to be sent
+	 * @param code
+	 *            Error code to be sent
+	 * @param description
+	 *            Error Description to be sent
 	 * @return Error object wrapped as KrollDict object
 	 */
 	public static KrollDict generateErrorObject(String code, String description) {
@@ -221,5 +244,37 @@ final public class MUtils {
 		kd.put(ATTRIB_ERROR_CODE, code);
 		kd.put(ATTRIB_ERROR_DESC, description);
 		return kd;
+	}
+
+	/**
+	 * This method checks if the callback object provided is of type
+	 * HashMap<String,KrollFunction> or not
+	 * 
+	 * @param callback
+	 *            Object passed by developer
+	 * @return true if valid object is received else false
+	 */
+	public static boolean checkCallbackObject(Object callback) {
+		boolean status = false;
+		if (callback != null && callback instanceof Map<?, ?>) {
+			Map<?, ?> map = (Map<?, ?>) callback;
+			Iterator<?> itcallback = map.keySet().iterator();
+			Object key = null, value = null;
+			int counter = map.size();
+			if (map.size() == counter) {
+				while (itcallback.hasNext()) {
+					key = itcallback.next();
+					value = map.get(key);
+					if (value instanceof KrollFunction) {
+						counter--;
+					}
+				}
+				if (counter == 0) {
+					status = true;
+				}
+			}
+		}
+
+		return status;
 	}
 }

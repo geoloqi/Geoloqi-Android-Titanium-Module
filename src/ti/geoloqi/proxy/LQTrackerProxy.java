@@ -5,7 +5,10 @@ import org.appcelerator.kroll.annotations.Kroll;
 
 import ti.geoloqi.common.MLog;
 import android.app.Activity;
+import android.content.Context;
 
+import com.geoloqi.android.sdk.LQSession;
+import com.geoloqi.android.sdk.LQSharedPreferences;
 import com.geoloqi.android.sdk.LQTracker;
 import com.geoloqi.android.sdk.LQTracker.LQTrackerProfile;
 
@@ -22,6 +25,7 @@ public class LQTrackerProxy extends KrollProxy {
 	private LQTracker tracker;
 	private LQSessionProxy sessionProxy;
 	private static LQTrackerProxy mInstance = null;
+	private Context context;
 
 	// Tracker Constants
 	private static final String TRACKERPROFILE_OFF = "OFF";
@@ -39,7 +43,8 @@ public class LQTrackerProxy extends KrollProxy {
 	 */
 	private LQTrackerProxy(Activity activity) {
 		super();
-		tracker = LQTracker.getInstance(activity.getApplicationContext());
+		context = activity.getApplicationContext();
+		tracker = LQTracker.getInstance(context);
 		MLog.d(LCAT, "LQTrackerProxy created");
 	}
 
@@ -63,31 +68,6 @@ public class LQTrackerProxy extends KrollProxy {
 	}
 
 	/**
-	 * Set the tracker session.
-	 * 
-	 * @param session LQSession proxy object
-	 */
-	@Kroll.method
-	public void setSession(LQSessionProxy session) {
-		MLog.d(LCAT, "in setSession");
-		if (session != null) {
-			tracker.setSession(session.getSession());
-			sessionProxy = session;
-		}
-	}
-
-	/**
-	 * Get the current tracker session.
-	 * 
-	 * @return LQSession proxy object
-	 */
-	@Kroll.method
-	public LQSessionProxy getSession() {
-		MLog.d(LCAT, "in getSession");
-		return sessionProxy;
-	}
-
-	/**
 	 * Get the current tracker profile.
 	 * 
 	 * @return tracker profile
@@ -102,9 +82,10 @@ public class LQTrackerProxy extends KrollProxy {
 	/**
 	 * Request the tracker to switch to a different tracking profile.
 	 * 
-	 * @param profile name of the profile
+	 * @param profile
+	 *            name of the profile
 	 * @return boolean value to signify whether the profile has been changed or
-	 * not.
+	 *         not.
 	 */
 	@Kroll.method
 	public boolean setProfile(String profile) {
@@ -121,7 +102,8 @@ public class LQTrackerProxy extends KrollProxy {
 	 * Determine if the tracker can successfully switch to the given profile
 	 * from its current state
 	 * 
-	 * @param profile name of the profile
+	 * @param profile
+	 *            name of the profile
 	 * @return boolean value to signify whether profile can be switched or not
 	 */
 	@Kroll.method
@@ -139,7 +121,8 @@ public class LQTrackerProxy extends KrollProxy {
 	 * maps the string value of the profile to one of the values in the
 	 * LQTrackerProfile.
 	 * 
-	 * @param profile string profile value
+	 * @param profile
+	 *            string profile value
 	 * @return LQTrackerProfile type
 	 */
 	public static LQTracker.LQTrackerProfile stringToProfile(String profile) {
@@ -158,19 +141,20 @@ public class LQTrackerProxy extends KrollProxy {
 	/**
 	 * convert the LQTrackerProfile value to string
 	 * 
-	 * @param profile LQTrackerProfile
+	 * @param profile
+	 *            LQTrackerProfile
 	 * @return profile value in string
 	 */
 	public static String profileToString(LQTracker.LQTrackerProfile profile) {
 		switch (profile) {
-			case OFF:
-				return TRACKERPROFILE_OFF;
-			case PASSIVE:
-				return TRACKERPROFILE_PASSIVE;
-			case REAL_TIME:
-				return TRACKERPROFILE_REALTIME;
-			case LOGGING:
-				return TRACKERPROFILE_LOGGING;
+		case OFF:
+			return TRACKERPROFILE_OFF;
+		case PASSIVE:
+			return TRACKERPROFILE_PASSIVE;
+		case REAL_TIME:
+			return TRACKERPROFILE_REALTIME;
+		case LOGGING:
+			return TRACKERPROFILE_LOGGING;
 
 		}
 		return null;
@@ -185,31 +169,13 @@ public class LQTrackerProxy extends KrollProxy {
 	public String getStatus() {
 		MLog.d(LCAT, "in getStatus");
 		switch (tracker.getStatus()) {
-			case LIVE:
-				return TRACKSTATUS_LIVE;
-			case QUEUEING:
-				return TRACKSTATUS_QUEUEING;
-			default:
-				return TRACKSTATUS_NOT_TRACKING;
+		case LIVE:
+			return TRACKSTATUS_LIVE;
+		case QUEUEING:
+			return TRACKSTATUS_QUEUEING;
+		default:
+			return TRACKSTATUS_NOT_TRACKING;
 		}
-	}
-
-	/**
-	 * Configure the tracker for the current tracking profile.
-	 */
-	@Kroll.method
-	public void configureForCurrentProfile() {
-		MLog.d(LCAT, "in configureForCurrentProfile");
-		tracker.configureForCurrentProfile();
-	}
-
-	/**
-	 * Immediately flush all unsent fixes to the server.
-	 */
-	@Kroll.method
-	public void uploadLocationQueue() {
-		MLog.d(LCAT, "in uploadLocationQueue");
-		tracker.uploadLocationQueue();
 	}
 
 	/**
@@ -221,4 +187,51 @@ public class LQTrackerProxy extends KrollProxy {
 		tracker.uploadLocationQueueIfNecessary();
 	}
 
+	/**
+	 * Returns Time of Last Location update in yyyy-MM-dd'T'HH:mm:ssZ format.
+	 */
+	@Kroll.method
+	public String getDateOfLastLocationUpdate() {
+		MLog.d(LCAT, "in getDateOfLastLocationUpdate");
+		// long time = LQSharedPreferences.getDateOfLastLocationUpdate(context);
+		// MLog.d(LCAT, "time of update =" + time);
+		return LQSession.formatTimestamp(LQSharedPreferences.getDateOfLastLocationUpdate(context));
+	}
+
+	/**
+	 * Returns Last Sync Time of Location update in yyyy-MM-dd'T'HH:mm:ssZ
+	 * format.
+	 */
+	@Kroll.method
+	public String getDateOfLastSyncedLocationUpdate() {
+		MLog.d(LCAT, "in getDateOfLastSyncedLocationUpdate with context =" + context);
+		// long time =
+		// LQSharedPreferences.getDateOfLastSyncedLocationUpdate(context);
+		// MLog.d(LCAT, "time of sync update =" + time);
+		return LQSession.formatTimestamp(LQSharedPreferences.getDateOfLastSyncedLocationUpdate(context));
+	}
+
+	/**
+	 * Set the tracker session.
+	 * 
+	 * @param session
+	 *            LQSession proxy object
+	 */
+	public void setSession(LQSessionProxy session) {
+		MLog.d(LCAT, "in setSession");
+		if (session != null) {
+			tracker.setSession(session.getSession());
+			sessionProxy = session;
+		}
+	}
+
+	/**
+	 * Get the current tracker session.
+	 * 
+	 * @return LQSession proxy object
+	 */
+	public LQSessionProxy getSession() {
+		MLog.d(LCAT, "in getSession");
+		return sessionProxy;
+	}
 }

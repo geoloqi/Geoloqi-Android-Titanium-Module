@@ -19,34 +19,23 @@ package ti.geoloqi;
  */
 public interface GeoloqiValidations {
 	// LQServiceWrapper Validations
-	String SRV_ACTION_NA_CODE = "SR001";
-	String SRV_ACTION_NA_DESC = "Action provided is not defined";
+	String SRV_CALLBACK_NA_CODE = "SR001";
+	String SRV_CALLBACK_NA_DESC = "Callback object missing or invalid in init parameter";
 
-	String SRV_UND_EXTRA_FLDS_CODE = "SR002";
-	String SRV_UND_EXTRA_FLDS_DESC = "Undefined Extra Field provided, field: ";
+	String SRV_INIT_PARAMS_EMPTY_CODE = "SR002";
+	String SRV_INIT_PARAMS_EMPTY_DESC = "Init parameters are either not provided or empty";
 
-	String SRV_INV_EXTRA_FLDS_CODE = "SR003";
-	String SRV_INV_EXTRA_FLDS_DESC = "Invalid Extra Fields provided";
+	String SRV_CLIENTID_NA_CODE = "SR003";
+	String SRV_CLIENTID_NA_DESC = "clientId not provided";
 
-	String SRV_ACTIVITY_NULL_CODE = "SR004";
-	String SRV_ACTIVITY_NULL_DESC = "Activity is null";
+	String SRV_CLIENTSECRET_NA_CODE = "SR004";
+	String SRV_CLIENTSECRET_NA_DESC = "clientSecret not provided";
 
-	String SRV_SERVICE_NA_CODE = "SR005";
+	String SRV_INIT_FAILED_CODE = "SR005";
+	String SRV_INIT_FAILED_DESC = "Internal error occured while initializing, check log for details";
+
+	String SRV_SERVICE_NA_CODE = "SR006";
 	String SRV_SERVICE_NA_DESC = "Service not available";
-
-	// LQLocationProxy validations
-
-	String LOC_LOCATION_NP_CODE = "LC001";
-	String LOC_LOCATION_NP_DESC = "Location not provided";
-
-	String LOC_LQLOCATION_NA_CODE = "LC002";
-	String LOC_LQLOCATION_NA_DESC = "LQLocation not available";
-
-	String LOC_INV_BATT_PARAM_CODE = "LC003";
-	String LOC_INV_BATT_PARAM_DESC = "Invalid value provided for battery parameter";
-
-	String LOC_UN_CONV_JSON_CODE = "LC004";
-	String LOC_UN_CONV_JSON_DESC = "Unable to convert to JSON";
 
 	// LQSessionProxy validation
 

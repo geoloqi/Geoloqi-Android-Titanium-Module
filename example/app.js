@@ -1,402 +1,121 @@
 // This is a test harness for your module
-// You should do something interesting in this harness 
-// to test out the module and to provide instructions 
+// You should do something interesting in this harness
+// to test out the module and to provide instructions
 // to users on how to use it by example.
 
 // open a single window
 var window = Ti.UI.createWindow({
-	backgroundColor : 'white'
+	backgroundColor : 'black',
+	layout : 'vertical'
 });
 
 var geoloqi = require('ti.geoloqi');
-geoloqi.setDebug(true);
-geoloqi.addEventListener("onValidate", function(e) {
-	alert("Validation Error: error_code: " + e.error_code
-			+ ", error_description: " + e.error_description);
-});
-geoloqi.addEventListener("onServiceConnected", function() {
-	sessionProxy = geoloqi.getLQSession();
-	Ti.API.debug("Session received: " + sessionProxy);
-});
-geoloqi.addEventListener("onServiceDisconnected", function() {
 
+geoloqi.addEventListener(geoloqi.ON_VALIDATE, function(e) {
+	Ti.API.debug("Validation Error: error_code: " + e.error_code + ", error_description: " + e.error_description);
 });
-
-var scrollViewer = Ti.UI.createScrollView({
-	contentWidth : 'auto',
-	contentHeight : 1000,
-	width : 1024,
-	// height: 400,
-	backgroundColor : '#c5c5c5',
-	showVerticalScrollIndicator : true,
-	showHorizontalScrollIndicator : false,
-	zIndex : 10
+geoloqi.addEventListener(geoloqi.LOCATION_CHANGED, function(e) {
+	Ti.API.debug("LOCATION_CHANGED: Location: " + e.location);
+});
+geoloqi.addEventListener(geoloqi.LOCATION_UPLOADED, function(e) {
+	Ti.API.debug("LOCATION_UPLOADED: number: " + e);
+});
+geoloqi.addEventListener(geoloqi.TRACKER_PROFILE_CHANGED, function(e) {
+	Ti.API.debug("TRACKER_PROFILE_CHANGED: OLD_PROFILE: " + e.OLD_PROFILE + ", NEW_PROFILE: " + e.NEW_PROFILE);
 });
 
-var sessionProxy;
-// android specific
-if (Ti.Platform.name == "android") {
-	var extras = {
-		EXTRA_SDK_ID : "b272bc7b3add8b4cb32a0c9b222ab6c4",
-		EXTRA_SDK_SECRET : "db9181529c7922e6d23764c4614966b4",
-		EXTRA_USERNAME : "sapan.varshney@globallogic.com",
-		EXTRA_PASSWORD : "S@pan123"
+geoloqi.init({
+	clientId : '',
+	clientSecret : '',
+	trackingProfile : 'OFF',
+	lowBatteryTracking : true,
+	// allowAnonymousUsers : true,
+	account : 'perminder.singh@globallogic.com',
+	icon : ''
+}, {
+	onSuccess : function() {
+		Ti.API.debug('init:onSuccess Called');
+		Ti.API.debug('init:Session: ' + geoloqi.session);
+		Ti.API.debug('init:Tracker: ' + geoloqi.tracker);
+		if(geoloqi.session != null) {
+			execute.setEnabled('true');
+		}
+	},
+	onFailure : function(e) {
+		Ti.API.debug('init:onFailure Called: error_code: ' + e.error_code + ', error_description: ' + e.error_description);
 	}
-
-	geoloqi.startLQService("ACTION_AUTH_USER", extras);
-
-}
-
-var buttonrestoreSavedSession = Ti.UI.createButton({
-	title : 'Restore Saved Session',
-	top : 5,
-	width : 200
 });
 
-var buttonIsPushEnabled = Ti.UI.createButton({
-	title : 'Is Push Enabled',
-	top : 60,
-	width : 200
+var header = Titanium.UI.createLabel({
+	text : 'Geoloqi Android SDK',
+	height : '80',
+	width : '100%',
+	backgroundColor : '#444444',
+	color : 'white',
+	font : {
+		fontSize : 20,
+		fontWeight : 'bold'
+	},
+	textAlign : Titanium.UI.TEXT_ALIGNMENT_CENTER
 });
 
-var buttonSetPushEnabled = Ti.UI.createButton({
-	title : 'Set Push Enabled',
-	top : 120,
-	width : 200
+var onSuccess = Titanium.UI.createLabel({
+	text : 'onSuccess',
+	top : '10',
+	height : '80',
+	width : '100%',
+	color : 'white',
+	backgroundColor : '#444444',
+	textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT
 });
-
-var buttonGetUserName = Ti.UI.createButton({
-	title : 'Get UserName',
-	top : 180,
-	width : 200
+var onComplete = Titanium.UI.createLabel({
+	text : 'onComplete',
+	top : '10',
+	height : '80',
+	width : '100%',
+	color : 'white',
+	backgroundColor : '#444444',
+	textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT
 });
-
-var buttonIsAnonymus = Ti.UI.createButton({
-	title : 'Is Anonymus',
-	top : 240,
-	width : 200
+var onFailure = Titanium.UI.createLabel({
+	text : 'onFailure',
+	top : '10',
+	height : '80',
+	width : '100%',
+	color : 'white',
+	backgroundColor : '#444444',
+	textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT
 });
-
-var buttonCreateAccountWithAnonymusUser = Ti.UI.createButton({
-	title : 'Create Acct With Anonymus User',
-	top : 300,
-	width : 200
+var execute = Titanium.UI.createButton({
+	title : 'Execute',
+	top : 10,
+	width : 100,
+	height : 50,
+	enabled : false
 });
-
-var buttonCreateAccountWithUserName = Ti.UI.createButton({
-	title : 'Create Account With User Name',
-	top : 360,
-	width : 200
-});
-
-var buttonAuthenticateUser = Ti.UI.createButton({
-	title : 'Authenticate User',
-	top : 420,
-	width : 200
-});
-
-var buttonregisterDeviceToken = Ti.UI.createButton({
-	title : 'Register Device User',
-	top : 480,
-	width : 200
-});
-
-var buttonRunGetrequest = Ti.UI.createButton({
-	title : 'Run Get Request',
-	top : 540,
-	width : 200
-});
-
-var buttonrunPostRequestWithJSONObject = Ti.UI.createButton({
-	title : 'Run Post Request With JSON Object',
-	top : 600,
-	width : 200
-});
-
-var runPostRequestWithJSONArray = Ti.UI.createButton({
-	title : 'Run Post Request With JSON Array',
-	top : 660,
-	width : 200
-});
-
-var runAPI = Ti.UI.createButton({
-	title : 'Run API',
-	top : 720,
-	width : 200
-});
-
-var buttonformatTimeStamp = Ti.UI.createButton({
-	title : 'Format Time Stamp',
-	top : 780,
-	width : 200
-});
-
-var buttoncreateLQSession = Ti.UI.createButton({
-	title : 'Create Session',
-	top : 840,
-	width : 200
-});
-
-// createLqSession();
-
-buttoncreateLQSession.addEventListener('click', function() {
-	createLqSession();
-});
-
-buttonrestoreSavedSession.addEventListener('click', function() {
-	var result = sessionProxy.restoreSavedSession();
-	alert(result);
-});
-
-buttonIsPushEnabled.addEventListener('click', function() {
-	var result = sessionProxy.isPushEnabled();
-	alert(result);
-});
-
-buttonSetPushEnabled.addEventListener('click', function() {
-	var result = sessionProxy.setPushEnabled(true);
-	alert(result);
-});
-
-buttonGetUserName.addEventListener('click', function() {
-	var result = sessionProxy.getUSerName();
-	alert(result);
-});
-
-buttonIsAnonymus.addEventListener('click', function() {
-	var result = sessionProxy.isAnonymous();
-	alert(result);
-});
-
-buttonCreateAccountWithAnonymusUser.addEventListener('click', function() {
-	sessionProxy.createAnonymousUserAccount({}, {
-		onComplete : function(e) {
-			alert(e);
-		},
-		onFailure : function(e) {
-			alert(e);
-		},
-		onSuccess : function(e) {
-			alert(e);
-			// Ti.App.Properties.setString('responsedata', JSON.stringify(e));
-			// mainwindow.add(getResponseView(mainwindow));
-		}
-
-	});
-});
-
-buttonCreateAccountWithUserName.addEventListener('click', function() {
-	sessionProxy.createAccountWithUsername('pritisrivastava',
-			'sapan.varshney@gmail.com', {
-				onComplete : function(e) {
-					alert(e);
-				},
-				onFailure : function(e) {
-					alert(e);
-				},
-				onSuccess : function(e) {
-					alert(e);
-				}
-			});
-});
-
-buttonAuthenticateUser.addEventListener('click', function() {
-	createLqSession();
-	sessionProxy.authenticateUser('sapan.varshney@globallogic.com', 'S@pan123',
-			{
-				onComplete : function(e) {
-					alert(e);
-				},
-				onFailure : function(e) {
-					alert(e);
-				},
-				onSuccess : function(e) {
-					//alert(e);
-					//alert(e);
-					//alert(e.session);
-					//alert(e.session.isAnonymous());
-					//var trackerProxy=geoloqi.getLQTracker();
-					//trackerProxy.setSession(e.session);
-				}
-			});
-});
-
-buttonregisterDeviceToken.addEventListener('click', function() {
-	sessionProxy.registerDeviceToken('1234', {
-		onComplete : function(e) {
-			alert(e);
-		},
-		onFailure : function(e) {
-			alert(e);
-		},
-		onSuccess : function(e) {
-			alert(e);
-		}
-	});
-});
-
-buttonRunGetrequest.addEventListener('click', function() {
-	var result = sessionProxy.runGetRequest("account/profile", {
-		onComplete : function(e) {
-			alert(e);
-		},
-		onFailure : function(e) {
-			alert(e);
-		},
-		onSuccess : function(e) {
-			alert(e);
-		}
-	});
-});
-
-buttonrunPostRequestWithJSONObject.addEventListener('click', function() {
-	var postJSON = {
-		text : 'This is test geonote',
-		"latitude" : "45.445793867111",
-		"longitude" : "-122.64261245728",
-		"radius": "10"
-		
-	};
-	sessionProxy.runPostRequestWithJSONObject("geonote/create", postJSON, {
-		onComplete : function(e) {
-			alert(e);
-		},
-		onFailure : function(e) {
-			alert(e);
-		},
-		onSuccess : function(e) {
-			alert(e);
-		}
-	});
-});
-runPostRequestWithJSONArray.addEventListener('click', function() {
-
-	var jsonObjectArray = [ {
-		"date" : "2010-07-23T09:19:38-07:00",
-		"location" : {
-			"position" : {
-				"latitude" : "45.445793867111",
-				"longitude" : "-122.64261245728",
-				"speed" : "10",
-				"altitude" : "0",
-				"horizontal_accuracy" : "24",
-				"vertical_accuracy" : "0"
-			},
-			"type" : "point"
-		},
-		"raw" : {
-			"distance_filter" : 5,
-			"tracking_limit" : 2,
-			"rate_limit" : 60,
-			"battery" : 86
-		},
-		"client" : {
-			"name" : "Geoloqi",
-			"version" : "0.1",
-			"platform" : "iPhone OS 4",
-			"hardware" : "iPhone2,1"
-		}
+execute.addEventListener('click', function(e) {
+	geoloqi.session.postRequest("oauth/token", {
+		"client_secret" : "",
+		"client_id" : "",
+		"username" : "",
+		"password" : "",
+		"grant_type" : "password"
 	}, {
-		"date" : "2010-07-23T09:19:38-07:00",
-		"location" : {
-			"position" : {
-				"latitude" : "45.445793867111",
-				"longitude" : "-122.64261245728",
-				"speed" : "10",
-				"altitude" : "0",
-				"horizontal_accuracy" : "24",
-				"vertical_accuracy" : "0"
-			},
-			"type" : "point"
-		},
-		"raw" : {
-			"distance_filter" : 5,
-			"tracking_limit" : 2,
-			"rate_limit" : 60,
-			"battery" : 86
-		},
-		"client" : {
-			"name" : "Geoloqi",
-			"version" : "0.1",
-			"platform" : "iPhone OS 4",
-			"hardware" : "iPhone2,1"
-		}
-	} ];
-
-	sessionProxy.runPostRequestWithJSONArray("location/update",
-			jsonObjectArray, {
-				onComplete : function(e) {
-					alert(e);
-				},
-				onFailure : function(e) {
-					alert(e);
-				},
-				onSuccess : function(e) {
-					alert(e);
-				}
-			});
-});
-
-runAPI.addEventListener('click', function() {
-	// var myJSON = {};
-	// sessionProxy.runAPIRequest("account/profile","GET",myJSON);
-	var postJSON = {
-		"name" : "sapanvarshney3"
-	};
-	sessionProxy.runAPIRequest("account/profile", "POST", postJSON, {
-		onComplete : function(e) {
-			alert(e);
+		onSuccess : function(e) {
+			onSuccess.setText(e);
 		},
 		onFailure : function(e) {
-			alert(e);
+			onFailure.setText(e);
 		},
-		onSuccess : function(e) {
-			alert(e);
+		onComplete : function(e) {
+			onComplete.setText(e);
 		}
 	});
 });
 
-buttonformatTimeStamp.addEventListener('click', function() {
-	var result = sessionProxy.formatTimeStamp(1111111111);
-	alert(result);
-});
-
-window.add(scrollViewer);
-scrollViewer.add(buttonrestoreSavedSession);
-scrollViewer.add(buttonIsPushEnabled);
-scrollViewer.add(buttonSetPushEnabled);
-scrollViewer.add(buttonGetUserName);
-scrollViewer.add(buttonIsAnonymus);
-scrollViewer.add(buttonCreateAccountWithAnonymusUser);
-scrollViewer.add(buttonCreateAccountWithUserName);
-scrollViewer.add(buttonAuthenticateUser);
-scrollViewer.add(buttonregisterDeviceToken);
-scrollViewer.add(buttonRunGetrequest);
-scrollViewer.add(buttonrunPostRequestWithJSONObject);
-scrollViewer.add(runPostRequestWithJSONArray);
-scrollViewer.add(runAPI);
-scrollViewer.add(buttonformatTimeStamp);
-scrollViewer.add(buttoncreateLQSession);
-// window.add(button);
-
-// var location = geoloqi.createLQLocation({
-// location:
-// {"provider":{"name":"gps"}}//,"coords":{"longitude":77,"latitude":28,"speed":0,"accuracy":0,"altitude":0}}
-// });
-//
-// alert("getSystemBatteryLevel: "+location.getSystemBatteryLevel());
-//
-// location.setBattery("90");
-//
-// alert("getBattery: "+location.getBattery());
-//
-// alert("toJson: "+location.toJson());
-
+window.add(header);
+window.add(onSuccess);
+window.add(onComplete);
+window.add(onFailure);
+window.add(execute);
 window.open();
-
-function createLqSession() {
-	sessionProxy = geoloqi.createLQSession({
-		apiKey : "b272bc7b3add8b4cb32a0c9b222ab6c4",
-		apiSecret : "db9181529c7922e6d23764c4614966b4"
-	});
-}
