@@ -2,6 +2,7 @@ tmp
 bin
 build
 *.zip
+*.swp
 .apt_generated
 libs
 build.properties
