@@ -8,7 +8,6 @@ import android.app.Activity;
 import android.content.Context;
 
 import com.geoloqi.android.sdk.LQSession;
-import com.geoloqi.android.sdk.LQSharedPreferences;
 import com.geoloqi.android.sdk.LQTracker;
 import com.geoloqi.android.sdk.LQTracker.LQTrackerProfile;
 
@@ -195,7 +194,7 @@ public class LQTrackerProxy extends KrollProxy {
 		MLog.d(LCAT, "in getDateOfLastLocationUpdate");
 		// long time = LQSharedPreferences.getDateOfLastLocationUpdate(context);
 		// MLog.d(LCAT, "time of update =" + time);
-		return LQSession.formatTimestamp(LQSharedPreferences.getDateOfLastLocationUpdate(context));
+		return LQSession.formatTimestamp(tracker.getTimeOfLastLocationUpdate());
 	}
 
 	/**
@@ -208,7 +207,7 @@ public class LQTrackerProxy extends KrollProxy {
 		// long time =
 		// LQSharedPreferences.getDateOfLastSyncedLocationUpdate(context);
 		// MLog.d(LCAT, "time of sync update =" + time);
-		return LQSession.formatTimestamp(LQSharedPreferences.getDateOfLastSyncedLocationUpdate(context));
+		return LQSession.formatTimestamp(tracker.getTimeOfLastUploadAttempt());
 	}
 
 	/**
