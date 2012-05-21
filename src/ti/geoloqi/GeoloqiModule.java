@@ -21,9 +21,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
 
 import com.geoloqi.android.sdk.LQSession;
+import com.geoloqi.android.sdk.LQSharedPreferences;
 import com.geoloqi.android.sdk.service.LQService;
 import com.geoloqi.android.sdk.service.LQService.LQBinder;
 
@@ -42,6 +44,8 @@ public class GeoloqiModule extends KrollModule {
 	public static final String LOCATION_UPLOADED = "onLocationUploaded";
 	@Kroll.constant
 	public static final String TRACKER_PROFILE_CHANGED = "onTrackerProfileChanged";
+	@Kroll.constant
+	public static final String PUSH_MESSAGE_RECEIVED = "onPushMessageReceived";
 
 	// Class constants
 	private final String USERNAME = "username";
@@ -52,9 +56,9 @@ public class GeoloqiModule extends KrollModule {
 	private final String CLIENT_SECRET = "clientSecret";
 	private final String TRACKING_PROFILE = "trackingProfile";
 	private final String LOW_BATTERY_TRACKING = "lowBatteryTracking";
-	private final String ALLOW_ANONYMOUS_USERS = "allowAnonymousUsers";
-	private final String PUSH_EMAIL = "account";
-	private final String PUSH_ICON = "icon";
+	private final String VIBRATE = "vibrate";
+	private final String PUSH_EMAIL = "pushAccount";
+	private final String PUSH_ICON = "pushIcon";
 	private final String DEFAULT_TRACKING_PROFILE = "OFF";
 
 	// Module instance
@@ -68,9 +72,13 @@ public class GeoloqiModule extends KrollModule {
 	private KrollFunction onFailureCallback;
 	private String initTrackerProfile = DEFAULT_TRACKING_PROFILE;
 
+	// Handler
+	private Handler handler = new Handler();
+
 	// Broadcast receiver instance
 	private LQBroadcastReceiverImpl locationBroadcastReceiver = new LQBroadcastReceiverImpl();
 	private boolean addLocationBroadcastReceiver = true;
+	
 	// Debug variable
 	public static boolean debug = false;
 
@@ -118,10 +126,9 @@ public class GeoloqiModule extends KrollModule {
 		super.onResume(activity);
 		// Service Binding
 		MLog.d(LCAT, "in onResume, activity is: " + activity);
-
+		
 		Intent intent = new Intent(activity, LQService.class);
 		activity.bindService(intent, mConnection, 0);
-
 		MLog.d(LCAT, "Attempting to bind to service....");
 
 		// Registering Broadcast receiver
@@ -199,7 +206,8 @@ public class GeoloqiModule extends KrollModule {
 		Map<String, KrollFunction> callbackMap = null;
 
 		String clientId = null, clientSecret = null, account = null, icon = null;
-		boolean lowBatteryTracking = false;// , allowAnonymousUsers = true;
+		boolean lowBatteryTracking = false;
+		boolean vibrate = false;
 
 		HashMap<String, String> mapExtras = new HashMap<String, String>(4);
 
@@ -244,10 +252,10 @@ public class GeoloqiModule extends KrollModule {
 				lowBatteryTracking = paramsMap.getBoolean(LOW_BATTERY_TRACKING);
 				mapExtras.put(LOW_BATTERY_TRACKING, String.valueOf(lowBatteryTracking));
 			}
-			// if (paramsMap.containsKey(ALLOW_ANONYMOUS_USERS)) {
-			// allowAnonymousUsers =
-			// paramsMap.getBoolean(ALLOW_ANONYMOUS_USERS);
-			// }
+			if (paramsMap.containsKey(VIBRATE)) {
+				vibrate = paramsMap.getBoolean(VIBRATE);
+				mapExtras.put(VIBRATE, String.valueOf(vibrate));
+			}
 			if (paramsMap.containsKey(PUSH_EMAIL)) {
 				account = paramsMap.getString(PUSH_EMAIL);
 				mapExtras.put(PUSH_EMAIL, account);
@@ -290,7 +298,7 @@ public class GeoloqiModule extends KrollModule {
 			email = mapParams.get(EMAIL);
 		}
 		if (!isSessionNull()) {
-			session.createAccountWithUsername(username, email, callback);
+			session.createUserAccount(username, email, callback, handler, getActivity());
 		}
 	}
 
@@ -307,7 +315,7 @@ public class GeoloqiModule extends KrollModule {
 	public void createAnonymousUser(Object object, Object callback) {
 		MLog.d(LCAT, "Inside createAnonymousUserAccount");
 		if (!isSessionNull()) {
-			session.createAnonymousUserAccount(callback);
+			session.createAnonymousUserAccount(callback, handler, getActivity());
 		}
 	}
 
@@ -327,7 +335,7 @@ public class GeoloqiModule extends KrollModule {
 		MLog.d(LCAT, "Inside Module authenticateUser");
 		if (!isSessionNull()) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.authenticateUser(userName, password, callback);
+			session.requestSession(userName, password, callback, handler, getActivity());
 		}
 	}
 
@@ -355,11 +363,7 @@ public class GeoloqiModule extends KrollModule {
 	@Kroll.method
 	public boolean isLowBatteryTrackingEnabled() {
 		MLog.d(LCAT, "in isLowBatteryTrackingEnabled");
-		boolean retVal = false;
-		if (checkService()) {
-			retVal = mService.getLowBatteryTracking();
-		}
-		return retVal;
+		return LQSharedPreferences.isLowBatteryTrackingEnabled(getActivity());
 	}
 
 	/**
@@ -369,9 +373,7 @@ public class GeoloqiModule extends KrollModule {
 	@Kroll.method
 	public void enableLowBatteryTracking() {
 		MLog.d(LCAT, "in enableLowBatteryTracking");
-		if (checkService()) {
-			mService.setLowBatteryTracking(true);
-		}
+		LQSharedPreferences.enableLowBatteryTracking(getActivity());
 	}
 
 	/**
@@ -381,9 +383,7 @@ public class GeoloqiModule extends KrollModule {
 	@Kroll.method
 	public void disableLowBatteryTracking() {
 		MLog.d(LCAT, "in disableLowBatteryTracking");
-		if (checkService()) {
-			mService.setLowBatteryTracking(false);
-		}
+		LQSharedPreferences.disableLowBatteryTracking(getActivity());
 	}
 
 	// method to check service availability,
@@ -412,18 +412,32 @@ public class GeoloqiModule extends KrollModule {
 
 		Intent intent = new Intent(activity, LQService.class);
 		intent.setAction(action);
-		intent.putExtra(LQService.EXTRA_SDK_ID, mapExtras.get(CLIENT_ID));
-		intent.putExtra(LQService.EXTRA_SDK_SECRET, mapExtras.get(CLIENT_SECRET));
 
+		if (mapExtras.containsKey(CLIENT_ID)) {
+			LQSharedPreferences.setClientId(activity, mapExtras.get(CLIENT_ID));
+		}
+		if (mapExtras.containsKey(CLIENT_SECRET)) {
+			LQSharedPreferences.setClientSecret(activity, mapExtras.get(CLIENT_SECRET));
+		}
 		if (mapExtras.containsKey(LOW_BATTERY_TRACKING)) {
-			intent.putExtra(LQService.EXTRA_LOW_BATTERY_TRACKING, Boolean.getBoolean(mapExtras.get(LOW_BATTERY_TRACKING)));
+			if (Boolean.getBoolean(mapExtras.get(LOW_BATTERY_TRACKING))) {
+				LQSharedPreferences.enableLowBatteryTracking(activity);
+			} else {
+				LQSharedPreferences.disableLowBatteryTracking(activity);
+			}
+		}
+		if (mapExtras.containsKey(VIBRATE)) {
+			if (Boolean.getBoolean(mapExtras.get(VIBRATE))) {
+				LQSharedPreferences.enableVibration(activity);
+			} else {
+				LQSharedPreferences.disableVibration(activity);
+			}
 		}
 		if (mapExtras.containsKey(PUSH_EMAIL)) {
-			intent.putExtra(LQService.EXTRA_C2DM_SENDER, mapExtras.get(PUSH_EMAIL));
+			LQSharedPreferences.setPushAccount(activity, mapExtras.get(PUSH_EMAIL));
 		}
 		if (mapExtras.containsKey(PUSH_ICON)) {
-			// intent.putExtra(LQService.<Not Available>,
-			// mapExtras.get("icon"));
+			LQSharedPreferences.setPushIcon(activity, mapExtras.get(PUSH_ICON));
 		}
 
 		activity.startService(intent);
@@ -433,11 +447,14 @@ public class GeoloqiModule extends KrollModule {
 
 	// Set session and tracker and call onSuccessCallback for init method
 	private void setInitValues(LQSession pSession) {
-		session = new LQSessionProxy(pSession);
-		tracker.setSession(session);
-		tracker.setProfile(initTrackerProfile);
-		moduleInitialized = true;
-		onSuccessCallback.call(krollObject, new HashMap<String, String>(1));
+		if (pSession != null) {
+			session = new LQSessionProxy(pSession);
+			tracker.setProfile(initTrackerProfile);
+			moduleInitialized = true;
+			onSuccessCallback.call(krollObject, new HashMap<String, String>(1));
+		} else {
+			onFailureCallback.call(krollObject, new HashMap<String, String>(1));
+		}
 	}
 
 	private ServiceConnection mConnection = new ServiceConnection() {
