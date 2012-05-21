@@ -8,6 +8,7 @@ import ti.geoloqi.common.MUtils;
 import ti.geoloqi.proxy.LQTrackerProxy;
 import android.content.Context;
 import android.location.Location;
+import android.os.Bundle;
 
 import com.geoloqi.android.sdk.LQTracker.LQTrackerProfile;
 import com.geoloqi.android.sdk.receiver.LQBroadcastReceiver;
@@ -70,4 +71,16 @@ public class LQBroadcastReceiverImpl extends LQBroadcastReceiver {
 		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.TRACKER_PROFILE_CHANGED, profileKD);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.geoloqi.android.sdk.receiver.LQBroadcastReceiver#onPushMessageReceived
+	 * (android.content.Context, android.os.Bundle)
+	 */
+	@Override
+	public void onPushMessageReceived(Context context, Bundle data) {
+		MLog.d(LCAT, "in onPushMessageReceived.");
+		GeoloqiModule.getInstance().fireEvent(GeoloqiModule.PUSH_MESSAGE_RECEIVED, data);
+	}
 }
