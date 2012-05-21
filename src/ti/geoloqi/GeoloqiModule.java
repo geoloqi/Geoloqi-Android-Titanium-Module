@@ -127,6 +127,9 @@ public class GeoloqiModule extends KrollModule {
 		// Service Binding
 		MLog.d(LCAT, "in onResume, activity is: " + activity);
 		
+		// Hack!
+		session = new LQSessionProxy(new LQSession(activity));
+		
 		Intent intent = new Intent(activity, LQService.class);
 		activity.bindService(intent, mConnection, 0);
 		MLog.d(LCAT, "Attempting to bind to service....");
@@ -467,7 +470,12 @@ public class GeoloqiModule extends KrollModule {
 				mBound = true;
 
 				if (!moduleInitialized) {
-					setInitValues(mService.getSession());
+					handler.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							setInitValues(mService.getSession());
+						}
+					}, 5000);
 				}
 
 				// Display the current tracker profile
