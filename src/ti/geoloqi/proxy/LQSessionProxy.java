@@ -19,6 +19,7 @@ import ti.geoloqi.common.MLog;
 import ti.geoloqi.common.MUtils;
 import ti.geoloqi.proxy.common.OnRunApiRequestListenerImpl;
 import android.content.Context;
+import android.os.Handler;
 
 import com.geoloqi.android.sdk.LQSession;
 
@@ -31,55 +32,11 @@ import com.geoloqi.android.sdk.LQSession;
 @Kroll.proxy
 public class LQSessionProxy extends KrollProxy {
 	private static final String LCAT = LQSessionProxy.class.getSimpleName();
-	private String key;
-	private String secret;
-	private String lqC2DMSender = "";
 	private LQSession session;
-	private Context context;
+	
 	// Session Proxy Constants
-	private final String API_KEY = "clientId";
-	private final String API_SECRET = "clientSecret";
-	private final String C2DM_SENDER = "c2dmSender";
 	private final String REQUESTTYPE_GET = "GET";
 	private final String REQUESTTYPE_POST = "POST";
-
-	// Kroll Proxy constants
-	@Kroll.constant
-	public static final String ISO_8601_DATE = LQSession.ISO_8601_DATE;
-	@Kroll.constant
-	public static final String EXTRA_USERNAME = LQSession.EXTRA_USERNAME;
-	@Kroll.constant
-	public static final String EXTRA_PASSWORD = LQSession.EXTRA_PASSWORD;
-	@Kroll.constant
-	public static final String EXTRA_EMAIL = LQSession.EXTRA_EMAIL;
-	@Kroll.constant
-	public static final String EXTRA_ACCESS_TOKEN = LQSession.EXTRA_ACCESS_TOKEN;
-	@Kroll.constant
-	public static final String EXTRA_IS_ANONYMOUS = LQSession.EXTRA_IS_ANONYMOUS;
-	@Kroll.constant
-	public static final String EXTRA_ERROR = LQSession.EXTRA_ERROR;
-	@Kroll.constant
-	public static final String EXTRA_ERROR_DESCRIPTION = LQSession.EXTRA_ERROR_DESCRIPTION;
-	@Kroll.constant
-	public static final String EXTRA_GRANT_TYPE = LQSession.EXTRA_GRANT_TYPE;
-	@Kroll.constant
-	public static final String DEVICE_ID_FIELD_NAME = LQSession.DEVICE_ID_FIELD_NAME;
-	@Kroll.constant
-	public static final String MAC_ADDRESS_FIELD_NAME = LQSession.MAC_ADDRESS_FIELD_NAME;
-	@Kroll.constant
-	public static final String C2DM_ID_FIELD_NAME = LQSession.C2DM_ID_FIELD_NAME;
-	@Kroll.constant
-	public static final String API_URL_BASE = LQSession.API_URL_BASE;
-	@Kroll.constant
-	public static final String API_PATH_USER_CREATE_ANON = LQSession.API_PATH_USER_CREATE_ANON;
-	@Kroll.constant
-	public static final String API_PATH_USER_CREATE = LQSession.API_PATH_USER_CREATE;
-	@Kroll.constant
-	public static final String API_PATH_LOCATION_UPDATE = LQSession.API_PATH_LOCATION_UPDATE;
-	@Kroll.constant
-	public static final String API_PATH_SET_C2DM_TOKEN = LQSession.API_PATH_SET_C2DM_TOKEN;
-	@Kroll.constant
-	public static final String API_PATH_OAUTH_TOKEN = LQSession.API_PATH_OAUTH_TOKEN;
 
 	/**
 	 * Class Constructor
@@ -108,7 +65,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            Object passed by developer
 	 * @return true if valid object is received else false
 	 */
-	private boolean checkCallback(Object callback) {
+	private static boolean checkCallback(Object callback) {
 		if (!MUtils.checkCallbackObject(callback)) {
 			GeoloqiModule.getInstance().fireEvent(GeoloqiModule.ON_VALIDATE, MUtils.generateErrorObject(GeoloqiValidations.SES_INVALID_CALLBK_CODE, GeoloqiValidations.SES_INVALID_CALLBK_DESC));
 			return false;
@@ -149,12 +106,18 @@ public class LQSessionProxy extends KrollProxy {
 	 *            for the account
 	 * @param callbackMap
 	 *            JSON object containing callback
+	 * @param handler
+	 *            Handler to run the callback
+	 * @param context
+	 *            app context
 	 */
-	public void createAccountWithUsername(String userName, String email, Object callback) throws Exception {
+	public void createUserAccount(String userName, String email, Object callback,
+			Handler handler, Context context) throws Exception {
 		MLog.d(LCAT, "Inside Session Proxy createAccountWithUsername");
-		if (checkCallback(callback) && !isSessionNull()) {
+		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.createAccountWithUsername(userName, email, new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap));
+			session.createUserAccount(userName, email,
+					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}
 
@@ -166,12 +129,18 @@ public class LQSessionProxy extends KrollProxy {
 	 *            object
 	 * @param callbackMap
 	 *            JSON object containing callback.
+	 * @param handler
+	 *            Handler to run the callback
+	 * @param context
+	 *            app context
 	 */
-	public void createAnonymousUserAccount(Object callback) {
+	public void createAnonymousUserAccount(Object callback, Handler handler,
+			Context context) {
 		MLog.d(LCAT, "Inside Session Proxy createAnonymousUserAccount");
-		if (checkCallback(callback) && !isSessionNull()) {
+		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.createAnonymousUserAccount(new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap));
+			session.createAnonymousUserAccount(
+					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}
 
@@ -185,13 +154,49 @@ public class LQSessionProxy extends KrollProxy {
 	 *            account password
 	 * @param callbackMap
 	 *            JSON object containing callback
+	 * @param handler
+	 *            Handler to run the callback
+	 * @param context
+	 *            app context
 	 */
-	public void authenticateUser(String userName, String password, Object callback) {
+	public void requestSession(String userName, String password, Object callback,
+			Handler handler, Context context) {
 		MLog.d(LCAT, "Inside Session Proxy authenticateUser");
-		if (checkCallback(callback) && !isSessionNull()) {
+		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.authenticateUser(userName, password, new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap));
+			session.requestSession(userName, password,
+					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
+	}
+
+	/**
+	 * Get the access token of the account associated with this session.
+	 * 
+	 * @return token
+	 */
+	@Kroll.method
+	public String getAccessToken() {
+		MLog.d(LCAT, "Inside getAccessToken");
+		String retVal = "";
+		if (!isSessionNull()) {
+			retVal = session.getAccessToken();
+		}
+		return retVal;
+	}
+
+	/**
+	 * Get the user id of the account associated with this session.
+	 * 
+	 * @return user id
+	 */
+	@Kroll.method
+	public String getUserId() {
+		MLog.d(LCAT, "Inside getUserId");
+		String retVal = "";
+		if (!isSessionNull()) {
+			retVal = session.getUserId();
+		}
+		return retVal;
 	}
 
 	/**
@@ -296,7 +301,6 @@ public class LQSessionProxy extends KrollProxy {
 	 * @param callbackMap
 	 *            JSON object containing callback
 	 */
-
 	private void runPostRequestWithJSONObject(String path, Object json, Object callback) {
 		MLog.d(LCAT, "Inside runPostRequestWithJSONObject");
 		if (checkCallback(callback) && !isSessionNull()) {
@@ -318,7 +322,6 @@ public class LQSessionProxy extends KrollProxy {
 	 * @param callbackMap
 	 *            JSON object containing callback
 	 */
-
 	private void runPostRequestWithJSONArray(String path, Object json, Object callback) {
 		MLog.d(LCAT, "Inside runPostRequestWithJSONArray");
 		if (checkCallback(callback) && !isSessionNull()) {
@@ -361,18 +364,6 @@ public class LQSessionProxy extends KrollProxy {
 				}
 			}
 		}
-	}
-
-	@Kroll.method
-	public String getUserId() {
-
-		// uncomment below line when getUserId() is available in geoloqi Android
-		// SDK
-		// return session.getUserId();
-
-		// comment below line when getUserId() is available in geoloqi Android
-		// SDK.
-		return "";
 	}
 
 	/**
