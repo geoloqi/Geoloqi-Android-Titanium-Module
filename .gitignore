@@ -2,7 +2,10 @@ tmp
 bin
 build
 *.zip
-*.swp
 .apt_generated
 libs
 build.properties
+*.swp
+
+# Ignore all generated dist files
+dist/
