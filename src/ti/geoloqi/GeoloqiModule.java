@@ -136,12 +136,8 @@ public class GeoloqiModule extends KrollModule {
 
 		// Registering Broadcast receiver
 		if (addLocationBroadcastReceiver) {
-			final IntentFilter filter = new IntentFilter();
-			filter.addAction(LQBroadcastReceiverImpl.ACTION_TRACKER_PROFILE_CHANGED);
-			filter.addAction(LQBroadcastReceiverImpl.ACTION_LOCATION_CHANGED);
-			filter.addAction(LQBroadcastReceiverImpl.ACTION_LOCATION_UPLOADED);
-			activity.getApplicationContext().registerReceiver(locationBroadcastReceiver, filter);
-
+			activity.getApplicationContext().registerReceiver(locationBroadcastReceiver,
+					LQBroadcastReceiverImpl.getDefaultIntentFilter());
 			MLog.d(LCAT, "Receiver Registered");
 		}
 	}
@@ -164,7 +160,8 @@ public class GeoloqiModule extends KrollModule {
 
 		// Unregister Broadcast receiver
 		if (addLocationBroadcastReceiver) {
-			activity.getApplicationContext().unregisterReceiver(locationBroadcastReceiver);
+			activity.getApplicationContext().unregisterReceiver(
+					locationBroadcastReceiver);
 			MLog.d(LCAT, "Receiver UnRegistered");
 		}
 	}
