@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.location.Location;
+import android.util.Log;
 
 /**
  * This is a utility class that contains common functions used by module classes
@@ -63,21 +64,12 @@ final public class MUtils {
 	public static KrollDict processHttpResponse(HttpResponse response, String format) {
 		KrollDict kd = new KrollDict();
 		try {
-			JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), format));
-
-			MLog.d(LCAT, json.toString(1));
-
-			Iterator<String> itResponse = json.keys();
-			String key = null, value = null;
-			KrollDict kdResponse = new KrollDict(5);
-			while (itResponse.hasNext()) {
-				key = itResponse.next();
-				value = (json.getString(key) == null ? "" : json.getString(key));
-
-				kdResponse.put(key, value);
-			}
-
-			kd.put(ATTRIB_RESPONSE, kdResponse);
+			// Parse the response to JSON
+			JSONObject json = new JSONObject(EntityUtils.toString(
+					response.getEntity(), format));
+			
+			// Create a new KrollDict from the JSONObject
+			kd = new KrollDict(json);
 		} catch (JSONException je) {
 			MLog.e(LCAT, "JSONException: " + je.toString());
 			je.printStackTrace();
@@ -88,7 +80,6 @@ final public class MUtils {
 			MLog.e(LCAT, "Exception: " + e.toString());
 			e.printStackTrace();
 		}
-
 		return kd;
 	}
 
