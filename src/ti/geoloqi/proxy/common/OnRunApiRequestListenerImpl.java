@@ -2,11 +2,13 @@ package ti.geoloqi.proxy.common;
 
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollObject;
+import org.json.JSONObject;
 
 import ti.geoloqi.common.MLog;
 import ti.geoloqi.common.MUtils;
@@ -66,10 +68,11 @@ public class OnRunApiRequestListenerImpl implements OnRunApiRequestListener {
 	 * org.apache.http.StatusLine)
 	 */
 	@Override
-	public void onComplete(LQSession session, HttpResponse response, StatusLine status) {
+	public void onComplete(LQSession session, JSONObject json,
+			Header[] headers, StatusLine status) {
 		MLog.d(LCAT, "onComplete, status code: " + String.valueOf(status.getStatusCode()));
 
-		KrollDict kd = MUtils.processHttpResponse(response);
+		KrollDict kd = MUtils.processHttpResponse(json, headers, status);
 
 		if (onComplete != null) {
 			onComplete.call(krollObject, kd);
@@ -100,10 +103,11 @@ public class OnRunApiRequestListenerImpl implements OnRunApiRequestListener {
 	 * .geoloqi.android.sdk.LQSession, org.apache.http.HttpResponse)
 	 */
 	@Override
-	public void onSuccess(LQSession session, HttpResponse response) {
-		MLog.d(LCAT, "onSuccess, status code: " + String.valueOf(response.getStatusLine().getStatusCode()));
-
-		KrollDict kd = MUtils.processHttpResponse(response);
+	public void onSuccess(LQSession session, JSONObject json,
+			Header[] headers) {
+		MLog.d(LCAT, "onSuccess");
+		
+		KrollDict kd = MUtils.processHttpResponse(json, headers, null);
 
 		if (onSuccess != null) {
 			onSuccess.call(krollObject, kd);

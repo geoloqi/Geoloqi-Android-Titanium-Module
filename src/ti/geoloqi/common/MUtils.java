@@ -7,7 +7,6 @@ import java.util.Map;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.util.EntityUtils;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.titanium.util.TiConvert;
@@ -22,7 +21,6 @@ import android.location.Location;
  */
 final public class MUtils {
 	public static final String LCAT = MUtils.class.getSimpleName();
-	private static final String DEFAULT_RESPONSE_FORMAT = "UTF-8";
 	private static final String ATTRIB_ERROR_CODE = "error_code";
 	private static final String ATTRIB_ERROR_DESC = "error_description";
 	private static final String ATTRIB_RESPONSE = "response";
@@ -51,40 +49,39 @@ final public class MUtils {
 	 * @return KrollDict
 	 */
 	public static KrollDict processHttpResponse(HttpResponse response) {
-		return processHttpResponse(response, DEFAULT_RESPONSE_FORMAT);
+		return processHttpResponse(response);
 	}
 
 	/**
 	 * HttpResponse to KrollDict Converter
 	 * 
-	 * @param response
-	 *            HttpResponse
-	 * @param format
-	 *            Content Format
+	 * @param json
+	 *            JSONObject
+	 * @param headers
+	 *            Header[]
+	 * @param status
+	 *            StatusLine; null-OK;
 	 * @return KrollDict
 	 */
-	@SuppressWarnings("unchecked")
-	public static KrollDict processHttpResponse(HttpResponse response, String format) {
+	public static KrollDict processHttpResponse(JSONObject json,
+			Header[] headers, StatusLine status) {
 		KrollDict kd = new KrollDict();
 		try {
-			// Parse the response to JSON
-			JSONObject json = new JSONObject(EntityUtils.toString(
-					response.getEntity(), format));
-			
 			// Get headers
-			KrollDict headers = new KrollDict();
-			for (Header h : response.getAllHeaders()) {
-				headers.put(h.getName(), h.getValue());
+			KrollDict headersDict = new KrollDict();
+			for (Header h : headers) {
+				headersDict.put(h.getName(), h.getValue());
 			}
 			
-			// Get the response status
-			StatusLine status = response.getStatusLine();
-			
 			// Include status code
-			kd.put(ATTRIB_STATUS, status.getStatusCode());
+			if (status != null) {
+				kd.put(ATTRIB_STATUS, status.getStatusCode());
+			} else {
+				kd.put(ATTRIB_STATUS, 200);
+			}
 			
 			// Include response headers
-			kd.put(ATTRIB_HEADERS, headers);
+			kd.put(ATTRIB_HEADERS, headersDict);
 			
 			// Include payload
 			kd.put(ATTRIB_RESPONSE, new KrollDict(json));
@@ -106,7 +103,6 @@ final public class MUtils {
 	 * 
 	 * @param location
 	 *            JSON Object
-	 * @return
 	 */
 	public static Location parseLocation(Object location) {
 		Location loc = null;
