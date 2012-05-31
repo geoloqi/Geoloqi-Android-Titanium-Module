@@ -26,6 +26,8 @@ final public class MUtils {
 	private static final String ATTRIB_ERROR_CODE = "error_code";
 	private static final String ATTRIB_ERROR_DESC = "error_description";
 	private static final String ATTRIB_RESPONSE = "response";
+	private static final String ATTRIB_HEADERS = "headers";
+	private static final String ATTRIB_STATUS = "status";
 
 	private static final String JSON_ATT_PROVIDER = "provider";
 	private static final String JSON_ATT_PROVIDER_NAME = "name";
@@ -79,13 +81,13 @@ final public class MUtils {
 			StatusLine status = response.getStatusLine();
 			
 			// Include status code
-			kd.put("status", status.getStatusCode());
+			kd.put(ATTRIB_STATUS, status.getStatusCode());
 			
 			// Include response headers
-			kd.put("headers", headers);
+			kd.put(ATTRIB_HEADERS, headers);
 			
 			// Include payload
-			kd.put("response", new KrollDict(json));
+			kd.put(ATTRIB_RESPONSE, new KrollDict(json));
 		} catch (JSONException je) {
 			MLog.e(LCAT, "JSONException: " + je.toString());
 			je.printStackTrace();
