@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.util.EntityUtils;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
@@ -14,7 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.location.Location;
-import android.util.Log;
 
 /**
  * This is a utility class that contains common functions used by module classes
@@ -68,8 +69,23 @@ final public class MUtils {
 			JSONObject json = new JSONObject(EntityUtils.toString(
 					response.getEntity(), format));
 			
-			// Create a new KrollDict from the JSONObject
-			kd = new KrollDict(json);
+			// Get headers
+			KrollDict headers = new KrollDict();
+			for (Header h : response.getAllHeaders()) {
+				headers.put(h.getName(), h.getValue());
+			}
+			
+			// Get the response status
+			StatusLine status = response.getStatusLine();
+			
+			// Include status code
+			kd.put("status", status.getStatusCode());
+			
+			// Include response headers
+			kd.put("headers", headers);
+			
+			// Include payload
+			kd.put("response", new KrollDict(json));
 		} catch (JSONException je) {
 			MLog.e(LCAT, "JSONException: " + je.toString());
 			je.printStackTrace();
