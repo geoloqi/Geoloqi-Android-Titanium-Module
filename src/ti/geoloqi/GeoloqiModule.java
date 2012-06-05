@@ -451,6 +451,7 @@ public class GeoloqiModule extends KrollModule {
 			session = new LQSessionProxy(pSession);
 			tracker.setProfile(initTrackerProfile);
 			moduleInitialized = true;
+			
 			onSuccessCallback.call(krollObject, new HashMap<String, String>(1));
 		} else {
 			onFailureCallback.call(krollObject, new HashMap<String, String>(1));
@@ -467,12 +468,21 @@ public class GeoloqiModule extends KrollModule {
 				mBound = true;
 
 				if (!moduleInitialized) {
-					handler.postDelayed(new Runnable() {
+					Runnable initRunnable = new Runnable() {
 						@Override
 						public void run() {
 							setInitValues(mService.getSession());
 						}
-					}, 5000);
+					};
+
+					if (mService.getSession() == null) {
+						// This is a hack to try to prevent the
+						// onSuccessCallback from firing before the service
+						// has a valid user session.
+						handler.postDelayed(initRunnable, 5000);
+					} else {
+						handler.post(initRunnable);
+					}
 				}
 
 				// Display the current tracker profile
