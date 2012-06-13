@@ -28,7 +28,8 @@ public class LQTrackerProxy extends KrollProxy {
 
 	// Tracker Constants
 	private static final String TRACKERPROFILE_OFF = "OFF";
-	private static final String TRACKERPROFILE_PASSIVE = "PASSIVE";
+	private static final String TRACKERPROFILE_ROUGH = "ROUGH";
+	private static final String TRACKERPROFILE_ADAPTIVE = "ADAPTIVE";
 	private static final String TRACKERPROFILE_REALTIME = "REALTIME";
 	private static final String TRACKERPROFILE_LOGGING = "LOGGING";
 	private static final String TRACKSTATUS_LIVE = "LIVE";
@@ -128,8 +129,10 @@ public class LQTrackerProxy extends KrollProxy {
 		LQTracker.LQTrackerProfile tProfile = null;
 		if (TRACKERPROFILE_OFF.equals(profile))
 			tProfile = LQTrackerProfile.OFF;
-		else if (TRACKERPROFILE_PASSIVE.equals(profile))
-			tProfile = LQTrackerProfile.PASSIVE;
+		else if (TRACKERPROFILE_ROUGH.equals(profile))
+			tProfile = LQTrackerProfile.ROUGH;
+		else if (TRACKERPROFILE_ADAPTIVE.equals(profile))
+			tProfile = LQTrackerProfile.ADAPTIVE;
 		else if (TRACKERPROFILE_REALTIME.equals(profile))
 			tProfile = LQTrackerProfile.REAL_TIME;
 		else if (TRACKERPROFILE_LOGGING.equals(profile))
@@ -148,13 +151,14 @@ public class LQTrackerProxy extends KrollProxy {
 		switch (profile) {
 		case OFF:
 			return TRACKERPROFILE_OFF;
-		case PASSIVE:
-			return TRACKERPROFILE_PASSIVE;
+		case ROUGH:
+			return TRACKERPROFILE_ROUGH;
+		case ADAPTIVE:
+			return TRACKERPROFILE_ADAPTIVE;
 		case REAL_TIME:
 			return TRACKERPROFILE_REALTIME;
 		case LOGGING:
 			return TRACKERPROFILE_LOGGING;
-
 		}
 		return null;
 	}
