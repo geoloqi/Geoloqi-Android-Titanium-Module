@@ -57,6 +57,7 @@ public class GeoloqiModule extends KrollModule {
 	private final String TRACKING_PROFILE = "trackingProfile";
 	private final String LOW_BATTERY_TRACKING = "lowBatteryTracking";
 	private final String VIBRATE = "vibrate";
+	private final String PUSH_SENDER = "pushSender";
 	private final String PUSH_EMAIL = "pushAccount";
 	private final String PUSH_ICON = "pushIcon";
 	private final String DEFAULT_TRACKING_PROFILE = "OFF";
@@ -205,7 +206,7 @@ public class GeoloqiModule extends KrollModule {
 		KrollDict paramsMap = new KrollDict((HashMap<String, Object>) params);
 		Map<String, KrollFunction> callbackMap = null;
 
-		String clientId = null, clientSecret = null, account = null, icon = null;
+		String clientId = null, clientSecret = null, sender = null, account = null, icon = null;
 		boolean lowBatteryTracking = false;
 		boolean vibrate = false;
 
@@ -255,6 +256,10 @@ public class GeoloqiModule extends KrollModule {
 			if (paramsMap.containsKey(VIBRATE)) {
 				vibrate = paramsMap.getBoolean(VIBRATE);
 				mapExtras.put(VIBRATE, String.valueOf(vibrate));
+			}
+			if (paramsMap.containsKey(PUSH_SENDER)) {
+				sender = paramsMap.getString(PUSH_SENDER);
+				mapExtras.put(PUSH_SENDER, sender);
 			}
 			if (paramsMap.containsKey(PUSH_EMAIL)) {
 				account = paramsMap.getString(PUSH_EMAIL);
@@ -433,9 +438,13 @@ public class GeoloqiModule extends KrollModule {
 				LQSharedPreferences.disableVibration(activity);
 			}
 		}
-		if (mapExtras.containsKey(PUSH_EMAIL)) {
+		
+		if (mapExtras.containsKey(PUSH_SENDER)) {
+			LQSharedPreferences.setGcmPushAccount(activity, mapExtras.get(PUSH_SENDER));
+		} else if (mapExtras.containsKey(PUSH_EMAIL)) {
 			LQSharedPreferences.setPushAccount(activity, mapExtras.get(PUSH_EMAIL));
 		}
+		
 		if (mapExtras.containsKey(PUSH_ICON)) {
 			LQSharedPreferences.setPushIcon(activity, mapExtras.get(PUSH_ICON));
 		}
