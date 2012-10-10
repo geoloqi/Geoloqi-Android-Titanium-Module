@@ -1,8 +1,15 @@
 package ti.geoloqi;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Handler;
+import android.os.IBinder;
+import com.geoloqi.android.sdk.LQSession;
+import com.geoloqi.android.sdk.LQSharedPreferences;
+import com.geoloqi.android.sdk.service.LQService;
+import com.geoloqi.android.sdk.service.LQService.LQBinder;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollModule;
@@ -10,24 +17,14 @@ import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.TiConfig;
 import org.appcelerator.titanium.TiApplication;
-
 import ti.geoloqi.common.MLog;
 import ti.geoloqi.common.MUtils;
 import ti.geoloqi.proxy.LQSessionProxy;
 import ti.geoloqi.proxy.LQTrackerProxy;
 import ti.geoloqi.proxy.common.LQBroadcastReceiverImpl;
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.os.Handler;
-import android.os.IBinder;
 
-import com.geoloqi.android.sdk.LQSession;
-import com.geoloqi.android.sdk.LQSharedPreferences;
-import com.geoloqi.android.sdk.service.LQService;
-import com.geoloqi.android.sdk.service.LQService.LQBinder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is a root module class of Geoloqi Titanium Android Module
@@ -50,6 +47,9 @@ public class GeoloqiModule extends KrollModule {
 	// Class constants
 	private final String USERNAME = "username";
 	private final String EMAIL = "email";
+    private final String KEY = "key";
+    private final String LAYER_IDS = "layerIds";
+    private final String GROUP_TOKENS = "groupTokens";
 	private final String ON_SUCCESS = "onSuccess";
 	private final String ON_FAILURE = "onFailure";
 	private final String CLIENT_ID = "clientId";
@@ -110,7 +110,7 @@ public class GeoloqiModule extends KrollModule {
 	/**
 	 * AppCreate event provided by Kroll
 	 * 
-	 * @param TiApplication
+	 * @param app
 	 */
 	@Kroll.onAppCreate
 	public static void onAppCreate(TiApplication app) {
@@ -286,41 +286,61 @@ public class GeoloqiModule extends KrollModule {
 	 * Perform an asynchronous HttpRequest to create a new user account and
 	 * update the session with the new account credentials.
 	 * 
-	 * @param params
+	 * @param args
 	 *            JSON object containing username and password
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	@Kroll.method
-	public void createUser(Object params, Object callback) throws Exception {
+	public void createUser(KrollDict args, Object callback) throws Exception {
 		MLog.d(LCAT, "Inside createAccountWithUsername");
-		Map<String, String> mapParams = (HashMap<String, String>) params;
-		String username = null, email = null;
-		if (mapParams.containsKey(USERNAME)) {
-			username = mapParams.get(USERNAME);
+		String username = null;
+        String email = null;
+        String[] layerIds = null;
+        String[] groupTokens = null;
+		if (args.containsKey(USERNAME)) {
+			username = args.getString(USERNAME);
 		}
-		if (mapParams.containsKey(EMAIL)) {
-			email = mapParams.get(EMAIL);
+		if (args.containsKey(EMAIL)) {
+			email = args.getString(EMAIL);
 		}
+        if (args.containsKey(LAYER_IDS)) {
+            layerIds = args.getStringArray(LAYER_IDS);
+        }
+        if (args.containsKey(GROUP_TOKENS)) {
+            groupTokens = args.getStringArray(GROUP_TOKENS);
+        }
 		if (!isSessionNull()) {
-			session.createUserAccount(username, email, callback, handler, getActivity());
+			session.createUserAccount(username, email, layerIds, groupTokens, callback, handler, getActivity());
 		}
 	}
 
 	/**
 	 * Perform an asynchronous HttpRequest to create a new anonymous user
 	 * account.
-	 * 
-	 * @param JSON
-	 *            object
-	 * @param callbackMap
-	 *            JSON object containing callback.
+	 *
+     * @param args
+     *            JSON object containing username and password
+     * @param callback
+     *            JSON object containing callback
 	 */
 	@Kroll.method
-	public void createAnonymousUser(Object object, Object callback) {
+	public void createAnonymousUser(KrollDict args, Object callback) {
 		MLog.d(LCAT, "Inside createAnonymousUserAccount");
+        String key = null;
+        String[] layerIds = null;
+        String[] groupTokens = null;
+        if (args.containsKey(KEY)) {
+            key = args.getString(KEY);
+        }
+        if (args.containsKey(LAYER_IDS)) {
+            layerIds = args.getStringArray(LAYER_IDS);
+        }
+        if (args.containsKey(GROUP_TOKENS)) {
+            groupTokens = args.getStringArray(GROUP_TOKENS);
+        }
 		if (!isSessionNull()) {
-			session.createAnonymousUserAccount(callback, handler, getActivity());
+			session.createAnonymousUserAccount(layerIds, groupTokens, callback, handler, getActivity());
 		}
 	}
 
@@ -332,7 +352,7 @@ public class GeoloqiModule extends KrollModule {
 	 *            account username
 	 * @param password
 	 *            account password
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	@Kroll.method
@@ -405,12 +425,9 @@ public class GeoloqiModule extends KrollModule {
 	/**
 	 * Starts geoloqi tracking service
 	 * 
-	 * @param activity
-	 *            current activity
 	 * @param action
 	 * @see com.geoloqi.android.sdk.service.LQService
-	 * @param extraParams
-	 *            JSON Object
+	 * @param mapExtras
 	 */
 	private void startService(String action, Map<String, String> mapExtras) {
 		Activity activity = getActivity();

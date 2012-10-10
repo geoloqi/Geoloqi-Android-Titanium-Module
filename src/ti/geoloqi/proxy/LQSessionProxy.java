@@ -1,27 +1,25 @@
 package ti.geoloqi.proxy;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
+import android.content.Context;
+import android.os.Handler;
+import com.geoloqi.android.sdk.LQSession;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import ti.geoloqi.GeoloqiModule;
 import ti.geoloqi.GeoloqiValidations;
 import ti.geoloqi.common.MLog;
 import ti.geoloqi.common.MUtils;
 import ti.geoloqi.proxy.common.OnRunApiRequestListenerImpl;
-import android.content.Context;
-import android.os.Handler;
 
-import com.geoloqi.android.sdk.LQSession;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Wrapper around the geoloqi LQSession class which is useful for making GeoLoqi
@@ -49,7 +47,7 @@ public class LQSessionProxy extends KrollProxy {
 	/**
 	 * Overloaded Class Constructor
 	 * 
-	 * @param LQSession
+	 * @param session
 	 */
 	public LQSessionProxy(LQSession session) {
 		super();
@@ -104,19 +102,20 @@ public class LQSessionProxy extends KrollProxy {
 	 *            for the account
 	 * @param email
 	 *            for the account
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 * @param handler
 	 *            Handler to run the callback
 	 * @param context
 	 *            app context
 	 */
-	public void createUserAccount(String userName, String email, Object callback,
+	public void createUserAccount(String userName, String email, String[] layerIds,
+            String[] groupTokens, Object callback,
 			Handler handler, Context context) throws Exception {
 		MLog.d(LCAT, "Inside Session Proxy createAccountWithUsername");
 		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.createUserAccount(userName, email,
+			session.createUserAccount(userName, email, layerIds, groupTokens,
 					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}
@@ -125,21 +124,19 @@ public class LQSessionProxy extends KrollProxy {
 	 * Perform an asynchronous HttpRequest to create a new anonymous user
 	 * account.
 	 * 
-	 * @param JSON
-	 *            object
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback.
 	 * @param handler
 	 *            Handler to run the callback
 	 * @param context
 	 *            app context
 	 */
-	public void createAnonymousUserAccount(Object callback, Handler handler,
-			Context context) {
+	public void createAnonymousUserAccount(String[] layerIds, String[] groupTokens,
+            Object callback, Handler handler, Context context) {
 		MLog.d(LCAT, "Inside Session Proxy createAnonymousUserAccount");
 		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.createAnonymousUserAccount(
+			session.createAnonymousUserAccount(layerIds, groupTokens,
 					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}
@@ -152,7 +149,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            account username
 	 * @param password
 	 *            account password
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 * @param handler
 	 *            Handler to run the callback
@@ -234,7 +231,7 @@ public class LQSessionProxy extends KrollProxy {
 	 * 
 	 * @param path
 	 *            API path
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 * @throws JSONException
 	 * @throws UnsupportedEncodingException
@@ -273,7 +270,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            API path
 	 * @param params
 	 *            parameters in form of JSONObject or JSONArray
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	@SuppressWarnings("rawtypes")
@@ -298,7 +295,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            API path
 	 * @param json
 	 *            object containing post parameters
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	private void runPostRequestWithJSONObject(String path, Object json, Object callback) {
@@ -319,7 +316,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            API path
 	 * @param json
 	 *            array of object containing post parameters
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	private void runPostRequestWithJSONArray(String path, Object json, Object callback) {
@@ -342,7 +339,7 @@ public class LQSessionProxy extends KrollProxy {
 	 *            name of the API
 	 * @param extraParameter
 	 *            JSON object containing data for making the request
-	 * @param callbackMap
+	 * @param callback
 	 *            JSON object containing callback
 	 */
 	@Kroll.method
