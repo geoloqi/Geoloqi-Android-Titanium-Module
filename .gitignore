@@ -6,6 +6,7 @@ build
 libs
 build.properties
 *.swp
+aliases
 
 # Ignore all generated dist files
 dist/
