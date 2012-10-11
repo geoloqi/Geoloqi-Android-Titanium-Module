@@ -131,12 +131,12 @@ public class LQSessionProxy extends KrollProxy {
 	 * @param context
 	 *            app context
 	 */
-	public void createAnonymousUserAccount(String[] layerIds, String[] groupTokens,
+	public void createAnonymousUserAccount(String key, String[] layerIds, String[] groupTokens,
             Object callback, Handler handler, Context context) {
 		MLog.d(LCAT, "Inside Session Proxy createAnonymousUserAccount");
 		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.createAnonymousUserAccount(layerIds, groupTokens,
+			session.createAnonymousUserAccount(key, layerIds, groupTokens,
 					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}

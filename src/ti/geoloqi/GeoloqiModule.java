@@ -79,7 +79,7 @@ public class GeoloqiModule extends KrollModule {
 	// Broadcast receiver instance
 	private LQBroadcastReceiverImpl locationBroadcastReceiver = new LQBroadcastReceiverImpl();
 	private boolean addLocationBroadcastReceiver = true;
-	
+
 	// Debug variable
 	public static boolean debug = false;
 
@@ -99,7 +99,7 @@ public class GeoloqiModule extends KrollModule {
 	/**
 	 * This method returns the instance of the GeoloqiModule class internally
 	 * used by module classes
-	 * 
+	 *
 	 * @return GeoloqiModule object
 	 */
 	public static GeoloqiModule getInstance() {
@@ -109,7 +109,7 @@ public class GeoloqiModule extends KrollModule {
 	/*** Module Lifecycle methods ***/
 	/**
 	 * AppCreate event provided by Kroll
-	 * 
+	 *
 	 * @param app
 	 */
 	@Kroll.onAppCreate
@@ -119,7 +119,7 @@ public class GeoloqiModule extends KrollModule {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.appcelerator.kroll.KrollModule#onResume(android.app.Activity)
 	 */
 	@Override
@@ -127,10 +127,10 @@ public class GeoloqiModule extends KrollModule {
 		super.onResume(activity);
 		// Service Binding
 		MLog.d(LCAT, "in onResume, activity is: " + activity);
-		
+
 		// Hack!
 		session = new LQSessionProxy(new LQSession(activity));
-		
+
 		Intent intent = new Intent(activity, LQService.class);
 		activity.bindService(intent, mConnection, 0);
 		MLog.d(LCAT, "Attempting to bind to service....");
@@ -145,7 +145,7 @@ public class GeoloqiModule extends KrollModule {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.appcelerator.kroll.KrollModule#onPause(android.app.Activity)
 	 */
 	@Override
@@ -180,7 +180,7 @@ public class GeoloqiModule extends KrollModule {
 
 	/**
 	 * This method is used to turn on/off debugging info.
-	 * 
+	 *
 	 * @param value
 	 */
 	@Kroll.method
@@ -192,25 +192,24 @@ public class GeoloqiModule extends KrollModule {
 
 	/**
 	 * This method is to initialize module
-	 * 
-	 * @param params
+	 *
+	 * @param args
 	 *            Parameters
 	 * @param callback
 	 *            Callback methods to be called
 	 */
 	@SuppressWarnings("unchecked")
 	@Kroll.method
-	public void init(Object params, Object callback) {
+	public void init(KrollDict args, Object callback) {
 		MLog.d(LCAT, "in init");
 		// Start service
-		KrollDict paramsMap = new KrollDict((HashMap<String, Object>) params);
 		Map<String, KrollFunction> callbackMap = null;
 
-		String clientId = null, clientSecret = null, sender = null, account = null, icon = null;
-		boolean lowBatteryTracking = false;
-		boolean vibrate = false;
+		String clientId = null, clientSecret = null, sender = null, account = null, key = null, icon = null;
+        String[] layerIds = null, groupTokens = null;
+		boolean lowBatteryTracking = false, vibrate = false;
 
-		HashMap<String, String> mapExtras = new HashMap<String, String>(4);
+		HashMap<String, String> mapExtras = new HashMap<String, String>(8);
 
 		try {
 			if (!MUtils.checkCallbackObject(callback)) {
@@ -226,55 +225,64 @@ public class GeoloqiModule extends KrollModule {
 				}
 			}
 			// if no parameters are received
-			if (paramsMap == null || paramsMap.isEmpty()) {
+			if (args == null || args.isEmpty()) {
 				onFailureCallback.call(krollObject, MUtils.generateErrorObject(GeoloqiValidations.SRV_INIT_PARAMS_EMPTY_CODE, GeoloqiValidations.SRV_INIT_PARAMS_EMPTY_DESC));
 				return;
 			}
 
 			// check all parameters
-			if (paramsMap.containsKey(CLIENT_ID)) {
-				clientId = paramsMap.getString(CLIENT_ID);
+			if (args.containsKey(CLIENT_ID)) {
+				clientId = args.getString(CLIENT_ID);
 				mapExtras.put(CLIENT_ID, clientId);
 			} else {
 				onFailureCallback.call(krollObject, MUtils.generateErrorObject(GeoloqiValidations.SRV_CLIENTID_NA_CODE, GeoloqiValidations.SRV_CLIENTID_NA_DESC));
 				return;
 			}
-			if (paramsMap.containsKey(CLIENT_SECRET)) {
-				clientSecret = paramsMap.getString(CLIENT_SECRET);
+			if (args.containsKey(CLIENT_SECRET)) {
+				clientSecret = args.getString(CLIENT_SECRET);
 				mapExtras.put(CLIENT_SECRET, clientSecret);
 			} else {
 				onFailureCallback.call(krollObject, MUtils.generateErrorObject(GeoloqiValidations.SRV_CLIENTSECRET_NA_CODE, GeoloqiValidations.SRV_CLIENTSECRET_NA_DESC));
 				return;
 			}
-			if (paramsMap.containsKey(TRACKING_PROFILE)) {
-				initTrackerProfile = paramsMap.getString(TRACKING_PROFILE);
+			if (args.containsKey(TRACKING_PROFILE)) {
+				initTrackerProfile = args.getString(TRACKING_PROFILE);
 			}
-			if (paramsMap.containsKey(LOW_BATTERY_TRACKING)) {
-				lowBatteryTracking = paramsMap.getBoolean(LOW_BATTERY_TRACKING);
+			if (args.containsKey(LOW_BATTERY_TRACKING)) {
+				lowBatteryTracking = args.getBoolean(LOW_BATTERY_TRACKING);
 				mapExtras.put(LOW_BATTERY_TRACKING, String.valueOf(lowBatteryTracking));
 			}
-			if (paramsMap.containsKey(VIBRATE)) {
-				vibrate = paramsMap.getBoolean(VIBRATE);
+			if (args.containsKey(VIBRATE)) {
+				vibrate = args.getBoolean(VIBRATE);
 				mapExtras.put(VIBRATE, String.valueOf(vibrate));
 			}
-			if (paramsMap.containsKey(PUSH_SENDER)) {
-				sender = paramsMap.getString(PUSH_SENDER);
+			if (args.containsKey(PUSH_SENDER)) {
+				sender = args.getString(PUSH_SENDER);
 				mapExtras.put(PUSH_SENDER, sender);
 			}
-			if (paramsMap.containsKey(PUSH_EMAIL)) {
-				account = paramsMap.getString(PUSH_EMAIL);
+			if (args.containsKey(PUSH_EMAIL)) {
+				account = args.getString(PUSH_EMAIL);
 				mapExtras.put(PUSH_EMAIL, account);
 			}
-			if (paramsMap.containsKey(PUSH_ICON)) {
-				icon = paramsMap.getString(PUSH_ICON);
+			if (args.containsKey(PUSH_ICON)) {
+				icon = args.getString(PUSH_ICON);
 				mapExtras.put(PUSH_ICON, icon);
 			}
+            if (args.containsKey(KEY)) {
+                key = args.getString(KEY);
+            }
+            if (args.containsKey(LAYER_IDS)) {
+                layerIds = args.getStringArray(LAYER_IDS);
+            }
+            if (args.containsKey(GROUP_TOKENS)) {
+                groupTokens = args.getStringArray(GROUP_TOKENS);
+            }
 
 			// set profile in tracker
 			tracker = LQTrackerProxy.getInstance(getActivity());
 
 			// start service
-			startService(LQService.ACTION_DEFAULT, mapExtras);
+			startService(LQService.ACTION_DEFAULT, mapExtras, key, layerIds, groupTokens);
 		} catch (Exception e) {
 			onFailureCallback.call(this.krollObject, MUtils.generateErrorObject(GeoloqiValidations.SRV_INIT_FAILED_CODE, GeoloqiValidations.SRV_INIT_FAILED_DESC));
 			e.printStackTrace();
@@ -285,7 +293,7 @@ public class GeoloqiModule extends KrollModule {
 	/**
 	 * Perform an asynchronous HttpRequest to create a new user account and
 	 * update the session with the new account credentials.
-	 * 
+	 *
 	 * @param args
 	 *            JSON object containing username and password
 	 * @param callback
@@ -328,8 +336,7 @@ public class GeoloqiModule extends KrollModule {
 	public void createAnonymousUser(KrollDict args, Object callback) {
 		MLog.d(LCAT, "Inside createAnonymousUserAccount");
         String key = null;
-        String[] layerIds = null;
-        String[] groupTokens = null;
+        String[] layerIds = null, groupTokens = null;
         if (args.containsKey(KEY)) {
             key = args.getString(KEY);
         }
@@ -340,14 +347,14 @@ public class GeoloqiModule extends KrollModule {
             groupTokens = args.getStringArray(GROUP_TOKENS);
         }
 		if (!isSessionNull()) {
-			session.createAnonymousUserAccount(layerIds, groupTokens, callback, handler, getActivity());
+			session.createAnonymousUserAccount(key, layerIds, groupTokens, callback, handler, getActivity());
 		}
 	}
 
 	/**
 	 * Perform an asynchronous request to exchange a user's username and
 	 * password for an OAuth access token.
-	 * 
+	 *
 	 * @param userName
 	 *            account username
 	 * @param password
@@ -366,7 +373,7 @@ public class GeoloqiModule extends KrollModule {
 
 	/**
 	 * Check session nullability
-	 * 
+	 *
 	 * @return session null or not
 	 */
 	private boolean isSessionNull() {
@@ -382,7 +389,7 @@ public class GeoloqiModule extends KrollModule {
 	/**
 	 * This method exposes functionality on module object to get the current
 	 * value of the low battery tracking preference.
-	 * 
+	 *
 	 * @return boolean Preference value.
 	 */
 	@Kroll.method
@@ -424,12 +431,13 @@ public class GeoloqiModule extends KrollModule {
 
 	/**
 	 * Starts geoloqi tracking service
-	 * 
+	 *
 	 * @param action
 	 * @see com.geoloqi.android.sdk.service.LQService
 	 * @param mapExtras
 	 */
-	private void startService(String action, Map<String, String> mapExtras) {
+	private void startService(String action, Map<String, String> mapExtras,
+            String key, String[] layerIds, String[] groupTokens) {
 		Activity activity = getActivity();
 
 		Intent intent = new Intent(activity, LQService.class);
@@ -455,16 +463,28 @@ public class GeoloqiModule extends KrollModule {
 				LQSharedPreferences.disableVibration(activity);
 			}
 		}
-		
+
 		if (mapExtras.containsKey(PUSH_SENDER)) {
 			LQSharedPreferences.setGcmPushAccount(activity, mapExtras.get(PUSH_SENDER));
 		} else if (mapExtras.containsKey(PUSH_EMAIL)) {
 			LQSharedPreferences.setPushAccount(activity, mapExtras.get(PUSH_EMAIL));
 		}
-		
+
 		if (mapExtras.containsKey(PUSH_ICON)) {
 			LQSharedPreferences.setPushIcon(activity, mapExtras.get(PUSH_ICON));
 		}
+
+        if (key != null) {
+            LQSharedPreferences.setSessionInitUserKey(activity, key);
+        }
+
+        if (layerIds != null) {
+            LQSharedPreferences.setSessionInitUserLayers(activity, layerIds);
+        }
+
+        if (groupTokens != null) {
+            LQSharedPreferences.setSessionInitUserGroups(activity, groupTokens);
+        }
 
 		activity.startService(intent);
 
@@ -477,7 +497,7 @@ public class GeoloqiModule extends KrollModule {
 			session = new LQSessionProxy(pSession);
 			tracker.setProfile(initTrackerProfile);
 			moduleInitialized = true;
-			
+
 			onSuccessCallback.call(krollObject, new HashMap<String, String>(1));
 		} else {
 			onFailureCallback.call(krollObject, new HashMap<String, String>(1));
