@@ -10,6 +10,6 @@
 	<classpathentry kind="lib" path="/Users/joshy/Library/Application Support/Titanium/mobilesdk/osx/2.1.2.GA/android/modules/titanium-filesystem.jar"/>
 	<classpathentry kind="lib" path="/Users/joshy/Library/Application Support/Titanium/mobilesdk/osx/2.1.2.GA/android/kroll-common.jar"/>
 	<classpathentry kind="lib" path="/Users/joshy/Library/Application Support/Titanium/mobilesdk/osx/2.1.2.GA/android/kroll-apt.jar"/>
-	<classpathentry kind="lib" path="lib/geoloqi.jar" sourcepath="/Users/joshy/geoloqi/Geoloqi-Android-SDK-Private/src"/>
+	<classpathentry kind="lib" path="/Users/joshy/geoloqi/Geoloqi-Android-Titanium-Module/lib/geoloqi.jar" sourcepath="/Users/joshy/geoloqi/Geoloqi-Android-SDK-Private/src"/>
 	<classpathentry kind="output" path="out/production/Geoloqi-Android-Titanium-Module"/>
 </classpath>
