@@ -145,7 +145,7 @@ public class LQSessionProxy extends KrollProxy {
 	 * Perform an asynchronous request to exchange a user's username and
 	 * password for an OAuth access token.
 	 * 
-	 * @param userName
+	 * @param username
 	 *            account username
 	 * @param password
 	 *            account password
@@ -156,12 +156,12 @@ public class LQSessionProxy extends KrollProxy {
 	 * @param context
 	 *            app context
 	 */
-	public void requestSession(String userName, String password, Object callback,
+	public void requestSession(String username, String password, Object callback,
 			Handler handler, Context context) {
 		MLog.d(LCAT, "Inside Session Proxy authenticateUser");
 		if (checkCallback(callback)) {
 			HashMap<String, KrollFunction> callbackMap = (HashMap<String, KrollFunction>) callback;
-			session.requestSession(userName, password,
+			session.requestSession(username, password,
 					new OnRunApiRequestListenerImpl(this.getKrollObject(), callbackMap), handler, context);
 		}
 	}
