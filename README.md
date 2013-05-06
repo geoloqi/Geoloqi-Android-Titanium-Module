@@ -1,5 +1,7 @@
 Geoloqi Android SDK module for Titanium.
 
+This was not developed in house at Geoloqi, and is no longer supported by Geoloqi.  This code has been released under the Apache license.
+
 ## Building
 
 To build the Titanium module you first need to make sure you have
